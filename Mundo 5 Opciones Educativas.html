@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mundo 5 · Opciones Educativas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 30px 35px;
+            max-width: 1000px;
+            width: 100%;
+        }
+        .btn-paso {
+            background: #38bdf8;
+            color: #0f172a;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 4px 0 #0284c7;
+        }
+        .btn-paso:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #0284c7; }
+        .btn-paso:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #0284c7; }
+        .btn-secundario {
+            background: transparent;
+            color: #94a3b8;
+            padding: 10px 20px;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-secundario:hover { background: rgba(255,255,255,0.05); border-color: #64748b; }
+        .btn-volver-lab {
+            display: inline-block;
+            background: #f7c948;
+            color: #0d0d1a;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        .btn-volver-lab:hover { background: #e0b030; transform: translateY(-2px); }
+        .paso { display: none; }
+        .paso.activo { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .progress-bar { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-bottom: 25px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8); transition: width 0.5s; width: 14%; }
+
+        input, textarea {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+            transition: border 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+
+        .seccion-preguntas {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+        .seccion-preguntas .titulo-bloque {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #7dd3fc;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .seccion-preguntas .pregunta {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 4px;
+            padding-left: 12px;
+            border-left: 2px solid rgba(56, 189, 248, 0.2);
+        }
+        .seccion-preguntas textarea {
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+
+        /* ================================================================
+           DASHBOARD - ESTILO HOJAS DE LIBRETA
+           ================================================================ */
+        .dashboard-libretas {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            padding: 10px 0;
+        }
+        .hoja-libreta {
+            background: #f8fafc;
+            border-radius: 12px 12px 8px 8px;
+            padding: 24px 22px 20px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            color: #0f172a;
+            position: relative;
+            min-height: 300px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .hoja-libreta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 4px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            border-radius: 0 0 4px 4px;
+        }
+        .hoja-libreta .encabezado-hoja {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .hoja-libreta .linea-respuesta {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            padding: 4px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            color: #1e293b;
+        }
+        .hoja-libreta .linea-respuesta strong {
+            color: #0284c7;
+            font-weight: 600;
+            font-size: 0.75rem;
+            display: inline-block;
+            min-width: 20px;
+        }
+        .hoja-libreta .linea-respuesta .texto {
+            font-family: 'Caveat', cursive;
+            font-size: 1.05rem;
+            color: #0f172a;
+        }
+        .hoja-libreta .pie-hoja {
+            margin-top: 16px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-align: right;
+            font-style: italic;
+        }
+        .hoja-libreta .numero-pagina {
+            position: absolute;
+            bottom: 12px;
+            right: 18px;
+            font-size: 0.65rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .dashboard-footer {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-family: 'Caveat', cursive;
+            font-size: 1.3rem;
+            color: #f7c948;
+            padding: 16px 0 8px;
+            border-top: 2px dashed rgba(247, 201, 72, 0.2);
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-libretas {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Enlace del test */
+        .test-link {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.1);
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: #7dd3fc;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            word-break: break-all;
+        }
+        .test-link:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel">
+
+        <!-- Barra de progreso -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Título -->
+        <div class="flex items-center gap-3 mb-4">
+            <span class="text-4xl">🎓</span>
+            <div>
+                <p class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Mundo 5</p>
+                <h1 class="text-2xl font-black text-white">Opciones Educativas</h1>
+                <p class="text-sm text-slate-400">Construye tu futuro profesional</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 0: INICIO ========= -->
+        <div id="paso0" class="paso activo">
+            <h2 class="text-xl font-bold text-cyan-300 mb-4">🎯 Bienvenido al Laboratorio</h2>
+            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700 mb-6">
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    En esta actividad explorarás tus <strong class="text-cyan-300">opciones educativas de nivel superior</strong>. 
+                    Realizarás un test vocacional y reflexionarás sobre la carrera que te gustaría estudiar.
+                </p>
+                <p class="text-sm text-slate-400 mt-3">📌 <strong>Instrucciones:</strong></p>
+                <ul class="text-sm text-slate-400 list-disc list-inside space-y-1 mt-1">
+                    <li>Realiza el <strong class="text-cyan-300">Test OLA</strong> (Observatorio Laboral).</li>
+                    <li>Reflexiona sobre los resultados y responde las preguntas.</li>
+                    <li>Revisa tu dashboard final y descárgalo en PDF.</li>
+                    <li>Sube tu evidencia al formulario.</li>
+                </ul>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">✏️ Nombre completo:</label>
+                    <input type="text" id="nombreAlumno" placeholder="Ej: García Pérez Ana Sofía" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">📚 Grupo:</label>
+                    <input type="text" id="grupoAlumno" placeholder="Ej: 5to A" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+            </div>
+            <button class="btn-paso w-full" onclick="iniciarLaboratorio()">Comenzar actividad ➔</button>
+        </div>
+
+        <!-- ========= PASO 1: INTRODUCCIÓN + TEST ========= -->
+        <div id="paso1" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-cyan-300">📖 Introducción</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(0)">⬅ Regresar</button>
+            </div>
+            <div class="bg-cyan-900/20 border border-cyan-500/30 p-5 rounded-xl mb-4">
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    <strong class="text-cyan-300">🎯 Propósito:</strong> Que el estudiante conozca las carreras que puede estudiar y las ocupaciones donde puede desempeñarse, a través de un test vocacional y una reflexión personal sobre su futuro profesional.
+                </p>
+            </div>
+
+            <div class="space-y-4 text-slate-300 text-sm leading-relaxed">
+                <p>
+                    <strong class="text-cyan-300">¿Qué es el Test OLA?</strong>
+                </p>
+                <p>
+                    El <strong class="text-cyan-300">Observatorio Laboral (OLA)</strong> es una herramienta del Gobierno de México que te ayuda a explorar carreras, ocupaciones y el mercado laboral.
+                </p>
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700">
+                    <p class="text-sm text-slate-400">🔗 <strong>Accede al test aquí:</strong></p>
+                    <a href="https://www.observatoriolaboral.gob.mx/#/test-vocacional" target="_blank" class="test-link mt-2 inline-block">
+                        https://www.observatoriolaboral.gob.mx/#/test-vocacional
+                    </a>
+                </div>
+                <div class="bg-amber-900/20 border border-amber-500/30 p-4 rounded-xl">
+                    <p class="text-xs text-amber-300 font-bold">📌 Recomendación:</p>
+                    <p class="text-sm text-slate-300">Realiza el test con calma. Al final, <strong class="text-amber-300">descarga el PDF con tus resultados</strong>; lo necesitarás como evidencia.</p>
+                </div>
+                <p class="mt-2">
+                    Después de realizar el test, <strong class="text-cyan-300">reflexiona sobre tus resultados</strong> y responde las preguntas que vienen a continuación.
+                </p>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(0)">⬅ Regresar</button>
+                <button class="btn-paso" onclick="irPaso(2)">📝 Responder cuestionario ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 2: CUESTIONARIO (2 BLOQUES) ========= -->
+        <div id="paso2" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-cyan-300">📝 Cuestionario de reflexión</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(1)">⬅ Regresar</button>
+            </div>
+            <div class="bg-cyan-900/20 border border-cyan-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-cyan-300">Instrucción:</strong> Responde con honestidad. Tus respuestas serán la base de tu análisis profesional.
+                </p>
+            </div>
+
+            <!-- BLOQUE 1: TEST OLA -->
+            <div class="seccion-preguntas">
+                <div class="titulo-bloque">📊 Bloque 1: Análisis del Test OLA</div>
+                <div class="pregunta">1. ¿Qué carreras te recomendó el test OLA? (enuméralas)</div>
+                <textarea id="b1_p1" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">2. ¿Cuál de esas carreras te llamó más la atención y por qué?</div>
+                <textarea id="b1_p2" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">3. ¿Qué ocupaciones o áreas de trabajo te parecieron más interesantes?</div>
+                <textarea id="b1_p3" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">4. ¿Hubo alguna carrera que no conocías y te sorprendió? ¿Cuál y por qué?</div>
+                <textarea id="b1_p4" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">5. ¿Qué habilidades o intereses propios crees que influyeron en los resultados del test?</div>
+                <textarea id="b1_p5" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">6. ¿Coinciden los resultados del test con lo que tú ya tenías en mente? ¿Por qué?</div>
+                <textarea id="b1_p6" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">7. ¿Qué duda o inquietud te generó el test o las carreras que te recomendó?</div>
+                <textarea id="b1_p7" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">8. ¿Qué carrera te gustaría investigar más a fondo después de este resultado?</div>
+                <textarea id="b1_p8" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+            </div>
+
+            <!-- BLOQUE 2: AUTOENTREVISTA -->
+            <div class="seccion-preguntas">
+                <div class="titulo-bloque">🎤 Bloque 2: Autoentrevista sobre mi carrera</div>
+                <div class="pregunta">1. ¿Qué carrera te interesa estudiar y por qué?</div>
+                <textarea id="b2_p1" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">2. ¿En qué áreas o lugares podrías trabajar al estudiar esta carrera?</div>
+                <textarea id="b2_p2" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">3. ¿Cuál es el rango salarial aproximado de un profesionista en esta área?</div>
+                <textarea id="b2_p3" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">4. ¿Qué especialidades o ramas tiene esta carrera? ¿Cuál te atrae más?</div>
+                <textarea id="b2_p4" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">5. ¿Se requiere alguna habilidad adicional (idiomas, software, etc.) para destacar en esta profesión?</div>
+                <textarea id="b2_p5" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">6. ¿Cómo crees que el cambio poblacional o tecnológico va a impactar esta carrera en el futuro?</div>
+                <textarea id="b2_p6" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">7. ¿Esta carrera se transformará o se mantendrá igual en los próximos años?</div>
+                <textarea id="b2_p7" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">8. ¿Qué impacto social o comunitario tiene esta profesión?</div>
+                <textarea id="b2_p8" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(1)">⬅ Regresar</button>
+                <button class="btn-paso" id="btnValidarCuestionario" onclick="validarCuestionario()">✅ Validar respuestas</button>
+                <button class="btn-paso" id="btnSiguienteCuestionario" style="display:none;" onclick="irPasoConCarga(3)">📊 Generar análisis ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 3: TRANSICIÓN ========= -->
+        <div id="paso3" class="paso text-center">
+            <div class="py-12">
+                <div class="text-6xl mb-6 animate-bounce">⏳</div>
+                <h2 class="text-2xl font-bold text-cyan-300 mb-3">Procesando tu información...</h2>
+                <p class="text-slate-400 text-sm">Estamos generando tu análisis profesional.</p>
+                <div class="w-48 h-2 bg-slate-700 rounded-full mx-auto mt-6 overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-cyan-400 to-indigo-400 rounded-full" id="barraCarga" style="width: 0%;"></div>
+                </div>
+                <p class="text-xs text-slate-500 mt-3" id="textoCarga">Preparando tu análisis...</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 4: DASHBOARD (HOJAS DE LIBRETA) ========= -->
+        <div id="paso4" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-cyan-300">📊 Mi análisis profesional</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(2)">⬅ Regresar</button>
+            </div>
+
+            <!-- Encabezado -->
+            <div class="bg-cyan-900/20 border border-cyan-500/30 p-4 rounded-xl mb-4">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div>
+                        <p class="text-xs text-slate-400">Creado por</p>
+                        <p class="text-lg font-bold text-white" id="dashNombre">--</p>
+                        <p class="text-sm text-slate-400" id="dashGrupo">--</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400">Fecha</p>
+                        <p class="text-sm text-slate-300" id="dashFecha">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hojas de libreta -->
+            <div class="dashboard-libretas" id="dashHojas">
+                <!-- Inyectado por JS -->
+            </div>
+
+            <!-- Sección de descarga -->
+            <div class="mt-6 p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl">
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex-1 min-w-[200px]">
+                        <button class="btn-paso w-full md:w-auto" onclick="generarPDF()">
+                            ⬇️ Descargar mi evidencia en PDF
+                        </button>
+                    </div>
+                    <div class="flex-1 min-w-[200px] text-center md:text-right">
+                        <p class="text-xs text-slate-400">
+                            📌 <span class="text-amber-300 font-bold">Alternativa:</span> 
+                            Si el PDF no se genera correctamente, puedes tomar una 
+                            <span class="text-amber-300 font-bold">captura de pantalla</span> 
+                            de este análisis y subirla como evidencia.
+                        </p>
+                        <button onclick="alert('📸 Presiona Ctrl+Shift+S (Windows) o Cmd+Shift+S (Mac) para capturar toda la pantalla, o usa la herramienta de recorte de tu sistema.')" 
+                                class="mt-2 text-xs text-amber-400 underline hover:text-amber-300 transition-colors">
+                            🖼️ ¿Cómo tomar una captura?
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-3 text-center">
+                    <button class="btn-paso" id="btnEnviarFormulario" style="display:none;" onclick="irPaso(5)">
+                        📤 Enviar evidencia
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========= PASO 5: ENVÍO ========= -->
+        <div id="paso5" class="paso text-center">
+            <div class="py-8">
+                <span class="text-6xl block mb-4">📤</span>
+                <h2 class="text-2xl font-bold text-cyan-300 mb-3">¡Listo para entregar!</h2>
+                <p class="text-slate-400 text-sm mb-6">
+                    Ya tienes tu evidencia en PDF (o tu captura de pantalla). Ahora solo debes subirla al formulario oficial.
+                </p>
+
+                <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-xl text-left mb-6">
+                    <p class="text-sm text-slate-300 font-bold mb-2">📌 Instrucciones importantes:</p>
+                    <ul class="text-sm text-slate-400 list-disc list-inside space-y-2">
+                        <li>Llena <strong class="text-cyan-300">todos</strong> los campos del formulario.</li>
+                        <li>Escribe tu <strong class="text-cyan-300">número de cuenta</strong> sin espacios al inicio ni al final.</li>
+                        <li>El número de cuenta es tu <strong class="text-cyan-300">identificador oficial</strong> para validar tu entrega.</li>
+                    </ul>
+                    <div class="mt-3 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded-xl">
+                        <p class="text-sm text-cyan-300 font-bold">📂 Recuerda subir <strong>dos archivos</strong>:</p>
+                        <ul class="text-sm text-slate-300 list-disc list-inside space-y-1 mt-1">
+                            <li><strong>1.</strong> El PDF o captura de pantalla de tu <strong class="text-cyan-300">Dashboard</strong> (con tus respuestas).</li>
+                            <li><strong>2.</strong> El PDF de resultados del <strong class="text-cyan-300">Test OLA</strong> que descargaste desde la página.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=nn_hqb6Q0EGE62pI6-n-wMN_dUxOwbVAu1QaWfm5rm1UQVBaMDlPMzBBU0JUTzk1NUNZM0dVRFZNOC4u" target="_blank" class="btn-paso inline-block text-center w-full" style="text-decoration:none;">
+                    📤 Subir mi evidencia al formulario
+                </a>
+
+                <div class="mt-6">
+                    <a href="../index.html" class="btn-volver-lab">🏠 Regresar a casa</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. CONFIGURACIÓN DE BLOQUES Y PREGUNTAS
+        // ============================================================
+        const bloques = [
+            { id: 'b1', titulo: '📊 Análisis del Test OLA', preguntas: [
+                '¿Qué carreras te recomendó el test OLA? (enuméralas)',
+                '¿Cuál de esas carreras te llamó más la atención y por qué?',
+                '¿Qué ocupaciones o áreas de trabajo te parecieron más interesantes?',
+                '¿Hubo alguna carrera que no conocías y te sorprendió? ¿Cuál y por qué?',
+                '¿Qué habilidades o intereses propios crees que influyeron en los resultados del test?',
+                '¿Coinciden los resultados del test con lo que tú ya tenías en mente? ¿Por qué?',
+                '¿Qué duda o inquietud te generó el test o las carreras que te recomendó?',
+                '¿Qué carrera te gustaría investigar más a fondo después de este resultado?'
+            ]},
+            { id: 'b2', titulo: '🎤 Autoentrevista sobre mi carrera', preguntas: [
+                '¿Qué carrera te interesa estudiar y por qué?',
+                '¿En qué áreas o lugares podrías trabajar al estudiar esta carrera?',
+                '¿Cuál es el rango salarial aproximado de un profesionista en esta área?',
+                '¿Qué especialidades o ramas tiene esta carrera? ¿Cuál te atrae más?',
+                '¿Se requiere alguna habilidad adicional (idiomas, software, etc.) para destacar en esta profesión?',
+                '¿Cómo crees que el cambio poblacional o tecnológico va a impactar esta carrera en el futuro?',
+                '¿Esta carrera se transformará o se mantendrá igual en los próximos años?',
+                '¿Qué impacto social o comunitario tiene esta profesión?'
+            ]}
+        ];
+
+        // ============================================================
+        // 2. ESTADO GLOBAL
+        // ============================================================
+        let pasoActual = 0;
+        const totalPasos = 6;
+        let nombre = '';
+        let grupo = '';
+        let respuestas = {};
+
+        // ============================================================
+        // 3. NAVEGACIÓN
+        // ============================================================
+        function irPaso(numero) {
+            document.querySelectorAll('.paso').forEach(el => el.classList.remove('activo'));
+            document.getElementById('paso' + numero).classList.add('activo');
+            pasoActual = numero;
+            document.getElementById('progressFill').style.width = ((numero / totalPasos) * 100) + '%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function iniciarLaboratorio() {
+            nombre = document.getElementById('nombreAlumno').value.trim();
+            grupo = document.getElementById('grupoAlumno').value.trim();
+            if (nombre.length < 3 || grupo.length < 1) {
+                alert('Por favor, llena todos los campos (nombre y grupo).');
+                return;
+            }
+            irPaso(1);
+        }
+
+        // ============================================================
+        // 4. VALIDACIÓN DEL CUESTIONARIO
+        // ============================================================
+        function validarCuestionario() {
+            let completo = true;
+            let camposVacios = [];
+
+            bloques.forEach(bloque => {
+                bloque.preguntas.forEach((p, idx) => {
+                    const id = bloque.id + '_p' + (idx + 1);
+                    const valor = document.getElementById(id).value.trim();
+                    if (valor.length < 5) {
+                        completo = false;
+                        camposVacios.push(id);
+                    }
+                });
+            });
+
+            if (completo) {
+                document.getElementById('btnValidarCuestionario').style.display = 'none';
+                document.getElementById('btnSiguienteCuestionario').style.display = 'inline-block';
+                alert('✅ ¡Cuestionario completado! Puedes continuar.');
+            } else {
+                alert('❌ Asegúrate de responder todas las preguntas con al menos 5 caracteres.\n' +
+                      'Faltan: ' + camposVacios.length + ' campos por llenar.');
+            }
+        }
+
+        // ============================================================
+        // 5. RECOPILACIÓN DE RESPUESTAS
+        // ============================================================
+        function recopilarRespuestas() {
+            respuestas = {};
+            bloques.forEach(bloque => {
+                respuestas[bloque.id] = [];
+                bloque.preguntas.forEach((p, idx) => {
+                    const id = bloque.id + '_p' + (idx + 1);
+                    respuestas[bloque.id].push(document.getElementById(id).value.trim() || 'No respondido');
+                });
+            });
+        }
+
+        // ============================================================
+        // 6. TRANSICIÓN CON CARGA
+        // ============================================================
+        function irPasoConCarga(numero) {
+            recopilarRespuestas();
+            irPaso(3);
+            let progreso = 0;
+            const barra = document.getElementById('barraCarga');
+            const texto = document.getElementById('textoCarga');
+            const interval = setInterval(() => {
+                progreso += Math.random() * 15;
+                if (progreso >= 100) {
+                    progreso = 100;
+                    clearInterval(interval);
+                    texto.textContent = '✅ ¡Análisis generado!';
+                    setTimeout(() => {
+                        irPaso(4);
+                        mostrarDashboard();
+                    }, 800);
+                }
+                barra.style.width = progreso + '%';
+                if (progreso < 30) texto.textContent = 'Procesando tus respuestas...';
+                else if (progreso < 60) texto.textContent = 'Diseñando tu análisis...';
+                else if (progreso < 90) texto.textContent = 'Aplicando formato profesional...';
+            }, 200);
+        }
+
+        // ============================================================
+        // 7. DASHBOARD (HOJAS DE LIBRETA)
+        // ============================================================
+        function mostrarDashboard() {
+            document.getElementById('dashNombre').textContent = nombre;
+            document.getElementById('dashGrupo').textContent = 'Grupo: ' + grupo;
+            document.getElementById('dashFecha').textContent = new Date().toLocaleDateString('es-MX', {
+                day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            const container = document.getElementById('dashHojas');
+            let html = '';
+
+            bloques.forEach((bloque, idx) => {
+                const respuestasBloque = respuestas[bloque.id] || [];
+                const numHoja = idx + 1;
+
+                html += `
+                    <div class="hoja-libreta">
+                        <div class="encabezado-hoja">
+                            ${bloque.titulo}
+                        </div>
+                        <div>
+                `;
+
+                bloque.preguntas.forEach((pregunta, idxP) => {
+                    const respuesta = respuestasBloque[idxP] || 'No respondido';
+                    html += `
+                        <div class="linea-respuesta">
+                            <strong>${idxP + 1}.</strong>
+                            <span class="texto">${respuesta}</span>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                        <div class="pie-hoja">${numHoja === 1 ? 'Análisis vocacional' : 'Plan de carrera'}</div>
+                        <div class="numero-pagina">${numHoja} / 2</div>
+                    </div>
+                `;
+            });
+
+            // Frase motivacional
+            html += `
+                <div class="dashboard-footer">
+                    "EL CONOCIMIENTO ABRE PUERTAS, LA ACCIÓN LAS ATRAVIESA."
+                </div>
+            `;
+
+            container.innerHTML = html;
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        // ============================================================
+        // 8. GENERACIÓN DE PDF
+        // ============================================================
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            // Fondo
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 297, 'F');
+
+            // Línea decorativa superior
+            doc.setDrawColor(56, 189, 248);
+            doc.setLineWidth(2);
+            doc.line(20, 25, 190, 25);
+
+            // Título principal
+            doc.setFontSize(22);
+            doc.setTextColor(56, 189, 248);
+            doc.text('🎓 Mis Opciones Educativas', 105, 48, { align: 'center' });
+
+            // Datos del estudiante
+            doc.setDrawColor(30, 41, 59);
+            doc.setFillColor(30, 41, 59);
+            doc.roundedRect(20, 60, 170, 22, 4, 4, 'FD');
+            doc.setFontSize(10);
+            doc.setTextColor(200, 200, 200);
+            doc.text(`Nombre: ${nombre}`, 28, 72);
+            doc.text(`Grupo: ${grupo}`, 28, 80);
+            doc.setTextColor(56, 189, 248);
+            doc.text(new Date().toLocaleDateString('es-MX'), 180, 72, { align: 'right' });
+
+            // Secciones
+            let yPos = 100;
+            bloques.forEach((bloque, idx) => {
+                const respuestasBloque = respuestas[bloque.id] || [];
+
+                if (yPos > 240) {
+                    doc.addPage();
+                    doc.setFillColor(15, 23, 42);
+                    doc.rect(0, 0, 210, 297, 'F');
+                    yPos = 20;
+                }
+
+                doc.setFontSize(14);
+                doc.setTextColor(56, 189, 248);
+                doc.text(bloque.titulo, 20, yPos);
+                yPos += 6;
+                doc.setDrawColor(51, 65, 85);
+                doc.line(20, yPos, 190, yPos);
+                yPos += 6;
+
+                doc.setFontSize(9);
+                doc.setTextColor(200, 200, 200);
+                bloque.preguntas.forEach((pregunta, idxP) => {
+                    const respuesta = respuestasBloque[idxP] || 'No respondido';
+                    doc.text(`${idxP+1}. ${respuesta}`, 22, yPos);
+                    yPos += 6;
+                });
+
+                yPos += 8;
+            });
+
+            // Pie de página
+            doc.setFontSize(10);
+            doc.setTextColor(247, 201, 72);
+            doc.text('"EL CONOCIMIENTO ABRE PUERTAS, LA ACCIÓN LAS ATRAVIESA."', 105, yPos + 10, { align: 'center' });
+
+            doc.setDrawColor(56, 189, 248);
+            doc.line(20, yPos + 18, 190, yPos + 18);
+            doc.setFontSize(7);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Documento generado automáticamente - SOE UAEMex', 105, yPos + 26, { align: 'center' });
+
+            doc.save('Opciones_Educativas_' + nombre.replace(/\s/g, '_') + '.pdf');
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        // ============================================================
+        // 9. INICIALIZAR
+        // ============================================================
+        irPaso(0);
+    </script>
+
+</body>
+</html>

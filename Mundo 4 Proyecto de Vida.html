@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mundo 4 · Proyecto de Vida</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 30px 35px;
+            max-width: 950px;
+            width: 100%;
+        }
+        .btn-paso {
+            background: #8b5cf6;
+            color: #fff;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 4px 0 #6d28d9;
+        }
+        .btn-paso:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #6d28d9; }
+        .btn-paso:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #6d28d9; }
+        .btn-secundario {
+            background: transparent;
+            color: #94a3b8;
+            padding: 10px 20px;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-secundario:hover { background: rgba(255,255,255,0.05); border-color: #64748b; }
+        .btn-volver-lab {
+            display: inline-block;
+            background: #f7c948;
+            color: #0d0d1a;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        .btn-volver-lab:hover { background: #e0b030; transform: translateY(-2px); }
+        .paso { display: none; }
+        .paso.activo { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .progress-bar { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-bottom: 25px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #74c0fc); transition: width 0.5s; width: 14%; }
+
+        input, textarea {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+            transition: border 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+        }
+
+        .seccion-preguntas {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+        .seccion-preguntas label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #c4b5fd;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .seccion-preguntas .pregunta {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            padding-left: 12px;
+            border-left: 2px solid rgba(139, 92, 246, 0.2);
+        }
+        .seccion-preguntas textarea {
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        /* ================================================================
+           DASHBOARD - ESTILO MAPA CONCEPTUAL
+           ================================================================ */
+        .dashboard-mapa {
+            background: radial-gradient(ellipse at 20% 50%, #1e1b4b, #0f172a);
+            padding: 30px 20px;
+            border-radius: 24px;
+            position: relative;
+            min-height: 600px;
+            border: 2px solid rgba(139, 92, 246, 0.15);
+            box-shadow: inset 0 0 100px rgba(139, 92, 246, 0.03);
+            overflow: hidden;
+        }
+
+        .mapa-lineas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .mapa-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        .mapa-grid .full-width { grid-column: 1 / -1; }
+        .mapa-grid .span-2 { grid-column: span 2; }
+
+        .tarjeta-vision {
+            position: relative;
+            z-index: 1;
+            padding: 18px 20px 20px;
+            border-radius: 16px 4px 16px 4px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(4px);
+        }
+        .tarjeta-vision:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        .tarjeta-vision .numero {
+            font-size: 1.8rem;
+            font-weight: 900;
+            opacity: 0.15;
+            position: absolute;
+            top: 8px;
+            right: 14px;
+            line-height: 1;
+        }
+        .tarjeta-vision .titulo {
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        .tarjeta-vision .subtitulo {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+        .tarjeta-vision .respuesta {
+            font-family: 'Caveat', cursive;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-top: 4px;
+            padding-left: 6px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        .tarjeta-vision .respuesta strong {
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.7rem;
+            opacity: 0.5;
+        }
+
+        /* Colores por sección */
+        .tarjeta-vision.seccion-1 { background: rgba(139, 92, 246, 0.18); border-color: rgba(139, 92, 246, 0.3); }
+        .tarjeta-vision.seccion-1 .titulo { color: #a78bfa; }
+        .tarjeta-vision.seccion-2 { background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.3); }
+        .tarjeta-vision.seccion-2 .titulo { color: #7dd3fc; }
+        .tarjeta-vision.seccion-3 { background: rgba(52, 211, 153, 0.15); border-color: rgba(52, 211, 153, 0.3); }
+        .tarjeta-vision.seccion-3 .titulo { color: #6ee7b7; }
+        .tarjeta-vision.seccion-4 { background: rgba(251, 146, 60, 0.15); border-color: rgba(251, 146, 60, 0.3); }
+        .tarjeta-vision.seccion-4 .titulo { color: #fdba74; }
+        .tarjeta-vision.seccion-5 { background: rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.3); }
+        .tarjeta-vision.seccion-5 .titulo { color: #fda4af; }
+        .tarjeta-vision.seccion-6 { background: rgba(250, 204, 21, 0.15); border-color: rgba(250, 204, 21, 0.3); }
+        .tarjeta-vision.seccion-6 .titulo { color: #fde047; }
+        .tarjeta-vision.seccion-7 { background: rgba(45, 212, 191, 0.15); border-color: rgba(45, 212, 191, 0.3); }
+        .tarjeta-vision.seccion-7 .titulo { color: #5eead4; }
+
+        .mapa-footer {
+            font-family: 'Caveat', cursive;
+            font-size: 1.4rem;
+            color: #f7c948;
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed rgba(247, 201, 72, 0.2);
+            letter-spacing: 1px;
+            text-shadow: 0 0 30px rgba(247, 201, 72, 0.05);
+        }
+
+        .ver-mas-btn {
+            font-size: 0.7rem;
+            color: #64748b;
+            cursor: pointer;
+            transition: color 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .ver-mas-btn:hover { color: #e2e8f0; }
+
+        @media (max-width: 768px) {
+            .mapa-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .mapa-grid .full-width { grid-column: 1 / -1; }
+            .mapa-grid .span-2 { grid-column: span 1; }
+        }
+        @media (max-width: 500px) {
+            .mapa-grid {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-mapa {
+                padding: 16px 12px;
+            }
+            .tarjeta-vision {
+                padding: 14px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel">
+
+        <!-- Barra de progreso -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Título -->
+        <div class="flex items-center gap-3 mb-4">
+            <span class="text-4xl">🌟</span>
+            <div>
+                <p class="text-xs font-bold text-purple-400 uppercase tracking-widest">Mundo 4</p>
+                <h1 class="text-2xl font-black text-white">Proyecto de Vida</h1>
+                <p class="text-sm text-slate-400">Construye tu tablero de visión</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 0: INICIO ========= -->
+        <div id="paso0" class="paso activo">
+            <h2 class="text-xl font-bold text-purple-300 mb-4">🎯 Bienvenido al Laboratorio</h2>
+            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700 mb-6">
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    En esta actividad construirás tu <strong class="text-purple-300">Tablero de Visión</strong>, 
+                    una representación visual de aquello que deseas construir y de las decisiones que te ayudarán a lograrlo.
+                </p>
+                <p class="text-sm text-slate-400 mt-3">📌 <strong>Instrucciones:</strong></p>
+                <ul class="text-sm text-slate-400 list-disc list-inside space-y-1 mt-1">
+                    <li>Lee la introducción sobre el Tablero de Visión.</li>
+                    <li>Responde las preguntas de las 7 secciones.</li>
+                    <li>Revisa tu dashboard final y descárgalo en PDF.</li>
+                    <li>Sube tu evidencia al formulario.</li>
+                </ul>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">✏️ Nombre completo:</label>
+                    <input type="text" id="nombreAlumno" placeholder="Ej: García Pérez Ana Sofía" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">📚 Grupo:</label>
+                    <input type="text" id="grupoAlumno" placeholder="Ej: 5to A" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+            </div>
+            <button class="btn-paso w-full" onclick="iniciarLaboratorio()">Comenzar actividad ➔</button>
+        </div>
+
+        <!-- ========= PASO 1: INTRODUCCIÓN ========= -->
+        <div id="paso1" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-purple-300">📖 Introducción</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(0)">⬅ Regresar</button>
+            </div>
+            <div class="bg-purple-900/20 border border-purple-500/30 p-5 rounded-xl mb-4">
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    <strong class="text-purple-300">🎯 Propósito:</strong> Promover en los estudiantes la construcción de su visión de futuro personal y profesional que fortalezca su motivación, favorezca la toma de decisiones conscientes y les permita definir metas para su proyecto de vida y carrera.
+                </p>
+            </div>
+
+            <div class="space-y-4 text-slate-300 text-sm leading-relaxed">
+                <p>
+                    <strong class="text-purple-300">¿Qué es un Tablero de Visión?</strong>
+                </p>
+                <p>
+                    "El tablero de visión" no es solo un collage de sueños; es una representación visual de aquello que deseas construir y de las decisiones que te ayudarán a lograrlo.
+                </p>
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 italic text-slate-400">
+                    "Imagina que han pasado 10 años. ¿Cómo es tu vida? ¿Qué estudiaste? ¿Cómo te sientes contigo mismo? ¿Qué lograste? ¿Qué decisiones importantes te ayudaron a llegar ahí?"
+                </div>
+                <p>
+                    A continuación, responderás preguntas que te ayudarán a construir tu tablero de visión. 
+                    <strong class="text-purple-300">Sé honesto/a y detallado/a en tus respuestas.</strong>
+                </p>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(0)">⬅ Regresar</button>
+                <button class="btn-paso" onclick="irPaso(2)">📝 Comenzar cuestionario ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 2: CUESTIONARIO (7 SECCIONES) ========= -->
+        <div id="paso2" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-purple-300">📝 Mi Tablero de Visión</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(1)">⬅ Regresar</button>
+            </div>
+            <div class="bg-purple-900/20 border border-purple-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-purple-300">Instrucción:</strong> Responde cada pregunta con honestidad. 
+                    Tus respuestas serán la base de tu Tablero de Visión.
+                </p>
+            </div>
+
+            <!-- SECCIÓN 1 -->
+            <div class="seccion-preguntas">
+                <p class="text-sm font-bold text-purple-300">🌟 1. LO QUE ME INSPIRA (MOTIVACIÓN)</p>
+                <div class="pregunta">¿Qué personas o experiencias te motivan a seguir adelante?</div>
+                <textarea id="s1_p1" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué valores son fundamentales en tu vida?</div>
+                <textarea id="s1_p2" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué te hace sentir vivo/a y con energía?</div>
+                <textarea id="s1_p3" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué frases o ideas te impulsan cuando tienes dudas?</div>
+                <textarea id="s1_p4" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué logros de otras personas admiras y por qué?</div>
+                <textarea id="s1_p5" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+            </div>
+
+            <!-- SECCIÓN 2 -->
+            <div class="seccion-preguntas">
+                <p class="text-sm font-bold text-purple-300">🚀 2. LA VIDA QUE QUIERO CONSTRUIR (PROYECTO DE VIDA Y CARRERA)</p>
+                <div class="pregunta">¿Cómo te imaginas tu vida en 5 años? ¿Y en 10 años?</div>
+                <textarea id="s2_p1" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué carrera o profesión te gustaría ejercer?</div>
+                <textarea id="s2_p2" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Cómo te gustaría vivir (ciudad, casa, estilo de vida)?</div>
+                <textarea id="s2_p3" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué tipo de relaciones personales y familiares deseas tener?</div>
+                <textarea id="s2_p4" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué contribución te gustaría hacer a la sociedad?</div>
+                <textarea id="s2_p5" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+            </div>
+
+            <!-- SECCIÓN 3 -->
+            <div class="seccion-preguntas">
+                <p class="text-sm font-bold text-purple-300">💪 3. MIS FORTALEZAS Y TALENTOS</p>
+                <div class="pregunta">¿Qué habilidades o talentos naturales posees?</div>
+                <textarea id="s3_p1" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué actividades se te facilitan más que a otros?</div>
+                <textarea id="s3_p2" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué cualidades personales te definen?</div>
+                <textarea id="s3_p3" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué te han dicho otras personas que haces bien?</div>
+                <textarea id="s3_p4" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué fortalezas puedes desarrollar aún más?</div>
+                <textarea id="s3_p5" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+            </div>
+
+            <!-- SECCIÓN 4 -->
+            <div class="seccion-preguntas">
+                <p class="text-sm font-bold text-purple-300">🎯 4. MIS DECISIONES CLAVE (TOMA DE DECISIONES)</p>
+                <div class="pregunta">¿Qué decisión importante debes tomar pronto para tu futuro?</div>
+                <textarea id="s4_p1" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué otra decisión te acercará a tus metas profesionales?</div>
+                <textarea id="s4_p2" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué decisión relacionada con tu desarrollo personal es clave?</div>
+                <textarea id="s4_p3" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué decisión sobre tu estilo de vida o salud es fundamental?</div>
+                <textarea id="s4_p4" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Cómo planeas tomar cada una de estas decisiones?</div>
+                <textarea id="s4_p5" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+            </div>
+
+            <!-- SECCIÓN 5 -->
+            <div class="seccion-preguntas">
+                <p class="text-sm font-bold text-purple-300">🔄 5. HÁBITOS Y ACCIONES QUE ME ACERCAN A MIS METAS</p>
+                <div class="pregunta">¿Qué hábitos diarios te acercan a tus metas?</div>
+                <textarea id="s5_p1" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué acciones semanales te mantienen enfocado/a?</div>
+                <textarea id="s5_p2" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué hábitos nuevos te gustaría incorporar?</div>
+                <textarea id="s5_p3" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué hábitos debes dejar para avanzar?</div>
+                <textarea id="s5_p4" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Cómo te asegurarás de mantener estos hábitos?</div>
+                <textarea id="s5_p5" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+            </div>
+
+            <!-- SECCIÓN 6 -->
+            <div class="seccion-preguntas">
+                <p class="text-sm font-bold text-purple-300">🤝 6. MI COMPROMISO (MI PRIMER PASO)</p>
+                <div class="pregunta">¿Qué acción concreta vas a realizar en los próximos 7 días?</div>
+                <textarea id="s6_p1" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué recurso o apoyo necesitas para cumplir tu compromiso?</div>
+                <textarea id="s6_p2" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Cómo medirás tu progreso en este compromiso?</div>
+                <textarea id="s6_p3" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué harás si enfrentas un obstáculo?</div>
+                <textarea id="s6_p4" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Cuándo revisarás tu avance y ajustarás tu plan?</div>
+                <textarea id="s6_p5" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+            </div>
+
+            <!-- SECCIÓN 7 -->
+            <div class="seccion-preguntas">
+                <p class="text-sm font-bold text-purple-300">👥 7. MI RED DE APOYO</p>
+                <div class="pregunta">¿Quiénes son las personas que te apoyan incondicionalmente?</div>
+                <textarea id="s7_p1" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué tipo de apoyo recibes de tu familia?</div>
+                <textarea id="s7_p2" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué amigos o mentores te impulsan a crecer?</div>
+                <textarea id="s7_p3" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Qué instituciones o comunidades te brindan respaldo?</div>
+                <textarea id="s7_p4" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="pregunta">¿Cómo puedes fortalecer tu red de apoyo?</div>
+                <textarea id="s7_p5" rows="2" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(1)">⬅ Regresar</button>
+                <button class="btn-paso" id="btnValidarCuestionario" onclick="validarCuestionario()">✅ Validar respuestas</button>
+                <button class="btn-paso" id="btnSiguienteCuestionario" style="display:none;" onclick="irPasoConCarga(3)">📊 Generar tablero ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 3: TRANSICIÓN ========= -->
+        <div id="paso3" class="paso text-center">
+            <div class="py-12">
+                <div class="text-6xl mb-6 animate-bounce">⏳</div>
+                <h2 class="text-2xl font-bold text-purple-300 mb-3">Construyendo tu tablero...</h2>
+                <p class="text-slate-400 text-sm">Estamos procesando tus respuestas y generando tu Tablero de Visión.</p>
+                <div class="w-48 h-2 bg-slate-700 rounded-full mx-auto mt-6 overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-purple-500 to-blue-400 rounded-full" id="barraCarga" style="width: 0%;"></div>
+                </div>
+                <p class="text-xs text-slate-500 mt-3" id="textoCarga">Preparando tu tablero...</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 4: DASHBOARD (ESTILO MAPA CONCEPTUAL) ========= -->
+        <div id="paso4" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-purple-300">🌟 MI TABLERO DE VISIÓN</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(2)">⬅ Regresar</button>
+            </div>
+
+            <!-- Encabezado -->
+            <div class="bg-purple-900/20 border border-purple-500/30 p-4 rounded-xl mb-4">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div>
+                        <p class="text-xs text-slate-400">Creado por</p>
+                        <p class="text-lg font-bold text-white" id="dashNombre">--</p>
+                        <p class="text-sm text-slate-400" id="dashGrupo">--</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400">Fecha</p>
+                        <p class="text-sm text-slate-300" id="dashFecha">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mapa conceptual -->
+            <div class="dashboard-mapa">
+                <!-- Líneas conectoras (SVG) -->
+                <svg class="mapa-lineas" viewBox="0 0 800 600" preserveAspectRatio="none">
+                    <g id="lineas-conectoras"></g>
+                </svg>
+
+                <!-- Grid de tarjetas -->
+                <div class="mapa-grid" id="dashSecciones">
+                    <!-- Inyectado por JS -->
+                </div>
+
+                <!-- Pie de página -->
+                <div class="mapa-footer">
+                    "YO ELIJO MI CAMINO, YO DECIDO MI FUTURO,<br>
+                    YO CONSTRUYO MI HISTORIA."
+                </div>
+            </div>
+
+            <!-- Sección de descarga -->
+            <div class="mt-6 p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl">
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex-1 min-w-[200px]">
+                        <button class="btn-paso w-full md:w-auto" onclick="generarPDF()">
+                            ⬇️ Descargar mi evidencia en PDF
+                        </button>
+                    </div>
+                    <div class="flex-1 min-w-[200px] text-center md:text-right">
+                        <p class="text-xs text-slate-400">
+                            📌 <span class="text-amber-300 font-bold">Alternativa:</span> 
+                            Si el PDF no se genera correctamente, puedes tomar una 
+                            <span class="text-amber-300 font-bold">captura de pantalla</span> 
+                            de este tablero y subirla como evidencia.
+                        </p>
+                        <button onclick="alert('📸 Presiona Ctrl+Shift+S (Windows) o Cmd+Shift+S (Mac) para capturar toda la pantalla, o usa la herramienta de recorte de tu sistema.')" 
+                                class="mt-2 text-xs text-amber-400 underline hover:text-amber-300 transition-colors">
+                            🖼️ ¿Cómo tomar una captura?
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-3 text-center">
+                    <button class="btn-paso" id="btnEnviarFormulario" style="display:none;" onclick="irPaso(5)">
+                        📤 Enviar evidencia
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========= PASO 5: ENVÍO ========= -->
+        <div id="paso5" class="paso text-center">
+            <div class="py-8">
+                <span class="text-6xl block mb-4">📤</span>
+                <h2 class="text-2xl font-bold text-purple-300 mb-3">¡Listo para entregar!</h2>
+                <p class="text-slate-400 text-sm mb-6">
+                    Ya tienes tu evidencia en PDF (o tu captura de pantalla). Ahora solo debes subirla al formulario oficial.
+                </p>
+
+                <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-xl text-left mb-6">
+                    <p class="text-sm text-slate-300 font-bold mb-2">📌 Instrucciones importantes:</p>
+                    <ul class="text-sm text-slate-400 list-disc list-inside space-y-2">
+                        <li>Llena <strong class="text-purple-300">todos</strong> los campos del formulario.</li>
+                        <li>Escribe tu <strong class="text-purple-300">número de cuenta</strong> sin espacios al inicio ni al final.</li>
+                        <li>El número de cuenta es tu <strong class="text-purple-300">identificador oficial</strong> para validar tu entrega.</li>
+                    </ul>
+                </div>
+
+                <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=nn_hqb6Q0EGE62pI6-n-wMN_dUxOwbVAu1QaWfm5rm1UQTVXV0xDTzlPMkNFQVNQV1Q5NDIxWVVGMS4u" target="_blank" class="btn-paso inline-block text-center w-full" style="text-decoration:none;">
+                    📤 Subir mi evidencia al formulario
+                </a>
+
+                <div class="mt-6">
+                    <a href="../index.html" class="btn-volver-lab">🏠 Regresar a casa</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. CONFIGURACIÓN DE SECCIONES Y PREGUNTAS
+        // ============================================================
+        const secciones = [
+            { id: 's1', titulo: 'LO QUE ME INSPIRA', subtitulo: 'MOTIVACIÓN', icono: '🌟', preguntas: [
+                '¿Qué personas o experiencias te motivan a seguir adelante?',
+                '¿Qué valores son fundamentales en tu vida?',
+                '¿Qué te hace sentir vivo/a y con energía?',
+                '¿Qué frases o ideas te impulsan cuando tienes dudas?',
+                '¿Qué logros de otras personas admiras y por qué?'
+            ]},
+            { id: 's2', titulo: 'LA VIDA QUE QUIERO CONSTRUIR', subtitulo: 'PROYECTO DE VIDA Y CARRERA', icono: '🚀', preguntas: [
+                '¿Cómo te imaginas tu vida en 5 años? ¿Y en 10 años?',
+                '¿Qué carrera o profesión te gustaría ejercer?',
+                '¿Cómo te gustaría vivir (ciudad, casa, estilo de vida)?',
+                '¿Qué tipo de relaciones personales y familiares deseas tener?',
+                '¿Qué contribución te gustaría hacer a la sociedad?'
+            ]},
+            { id: 's3', titulo: 'MIS FORTALEZAS Y TALENTOS', subtitulo: '', icono: '💪', preguntas: [
+                '¿Qué habilidades o talentos naturales posees?',
+                '¿Qué actividades se te facilitan más que a otros?',
+                '¿Qué cualidades personales te definen?',
+                '¿Qué te han dicho otras personas que haces bien?',
+                '¿Qué fortalezas puedes desarrollar aún más?'
+            ]},
+            { id: 's4', titulo: 'MIS DECISIONES CLAVE', subtitulo: 'TOMA DE DECISIONES', icono: '🎯', preguntas: [
+                '¿Qué decisión importante debes tomar pronto para tu futuro?',
+                '¿Qué otra decisión te acercará a tus metas profesionales?',
+                '¿Qué decisión relacionada con tu desarrollo personal es clave?',
+                '¿Qué decisión sobre tu estilo de vida o salud es fundamental?',
+                '¿Cómo planeas tomar cada una de estas decisiones?'
+            ]},
+            { id: 's5', titulo: 'HÁBITOS Y ACCIONES QUE ME ACERCAN A MIS METAS', subtitulo: '', icono: '🔄', preguntas: [
+                '¿Qué hábitos diarios te acercan a tus metas?',
+                '¿Qué acciones semanales te mantienen enfocado/a?',
+                '¿Qué hábitos nuevos te gustaría incorporar?',
+                '¿Qué hábitos debes dejar para avanzar?',
+                '¿Cómo te asegurarás de mantener estos hábitos?'
+            ]},
+            { id: 's6', titulo: 'MI COMPROMISO', subtitulo: 'MI PRIMER PASO', icono: '🤝', preguntas: [
+                '¿Qué acción concreta vas a realizar en los próximos 7 días?',
+                '¿Qué recurso o apoyo necesitas para cumplir tu compromiso?',
+                '¿Cómo medirás tu progreso en este compromiso?',
+                '¿Qué harás si enfrentas un obstáculo?',
+                '¿Cuándo revisarás tu avance y ajustarás tu plan?'
+            ]},
+            { id: 's7', titulo: 'MI RED DE APOYO', subtitulo: '', icono: '👥', preguntas: [
+                '¿Quiénes son las personas que te apoyan incondicionalmente?',
+                '¿Qué tipo de apoyo recibes de tu familia?',
+                '¿Qué amigos o mentores te impulsan a crecer?',
+                '¿Qué instituciones o comunidades te brindan respaldo?',
+                '¿Cómo puedes fortalecer tu red de apoyo?'
+            ]}
+        ];
+
+        // ============================================================
+        // 2. ESTADO GLOBAL
+        // ============================================================
+        let pasoActual = 0;
+        const totalPasos = 6;
+        let nombre = '';
+        let grupo = '';
+        let respuestas = {};
+
+        // ============================================================
+        // 3. NAVEGACIÓN
+        // ============================================================
+        function irPaso(numero) {
+            document.querySelectorAll('.paso').forEach(el => el.classList.remove('activo'));
+            document.getElementById('paso' + numero).classList.add('activo');
+            pasoActual = numero;
+            document.getElementById('progressFill').style.width = ((numero / totalPasos) * 100) + '%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function iniciarLaboratorio() {
+            nombre = document.getElementById('nombreAlumno').value.trim();
+            grupo = document.getElementById('grupoAlumno').value.trim();
+            if (nombre.length < 3 || grupo.length < 1) {
+                alert('Por favor, llena todos los campos (nombre y grupo).');
+                return;
+            }
+            irPaso(1);
+        }
+
+        // ============================================================
+        // 4. VALIDACIÓN DEL CUESTIONARIO
+        // ============================================================
+        function validarCuestionario() {
+            let completo = true;
+            let camposVacios = [];
+
+            secciones.forEach(sec => {
+                sec.preguntas.forEach((p, idx) => {
+                    const id = sec.id + '_p' + (idx + 1);
+                    const valor = document.getElementById(id).value.trim();
+                    if (valor.length < 5) {
+                        completo = false;
+                        camposVacios.push(id);
+                    }
+                });
+            });
+
+            if (completo) {
+                document.getElementById('btnValidarCuestionario').style.display = 'none';
+                document.getElementById('btnSiguienteCuestionario').style.display = 'inline-block';
+                alert('✅ ¡Cuestionario completado! Puedes continuar.');
+            } else {
+                alert('❌ Asegúrate de responder todas las preguntas con al menos 5 caracteres.\n' +
+                      'Faltan: ' + camposVacios.length + ' campos por llenar.');
+            }
+        }
+
+        // ============================================================
+        // 5. RECOPILACIÓN DE RESPUESTAS
+        // ============================================================
+        function recopilarRespuestas() {
+            respuestas = {};
+            secciones.forEach(sec => {
+                respuestas[sec.id] = [];
+                sec.preguntas.forEach((p, idx) => {
+                    const id = sec.id + '_p' + (idx + 1);
+                    respuestas[sec.id].push(document.getElementById(id).value.trim() || 'No respondido');
+                });
+            });
+        }
+
+        // ============================================================
+        // 6. TRANSICIÓN CON CARGA
+        // ============================================================
+        function irPasoConCarga(numero) {
+            recopilarRespuestas();
+            irPaso(3);
+            let progreso = 0;
+            const barra = document.getElementById('barraCarga');
+            const texto = document.getElementById('textoCarga');
+            const interval = setInterval(() => {
+                progreso += Math.random() * 15;
+                if (progreso >= 100) {
+                    progreso = 100;
+                    clearInterval(interval);
+                    texto.textContent = '✅ ¡Tablero generado!';
+                    setTimeout(() => {
+                        irPaso(4);
+                        mostrarDashboard();
+                    }, 800);
+                }
+                barra.style.width = progreso + '%';
+                if (progreso < 30) texto.textContent = 'Procesando tus respuestas...';
+                else if (progreso < 60) texto.textContent = 'Diseñando tu tablero...';
+                else if (progreso < 90) texto.textContent = 'Aplicando estilo visual...';
+            }, 200);
+        }
+
+        // ============================================================
+        // 7. DASHBOARD (MAPA CONCEPTUAL)
+        // ============================================================
+        function mostrarDashboard() {
+            document.getElementById('dashNombre').textContent = nombre;
+            document.getElementById('dashGrupo').textContent = 'Grupo: ' + grupo;
+            document.getElementById('dashFecha').textContent = new Date().toLocaleDateString('es-MX', {
+                day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            const container = document.getElementById('dashSecciones');
+            let html = '';
+
+            // Distribución en grid (algunas secciones más grandes)
+            const layout = [
+                { col: 'span-2', row: 1 },
+                { col: '', row: 1 },
+                { col: '', row: 2 },
+                { col: 'span-2', row: 2 },
+                { col: '', row: 3 },
+                { col: '', row: 3 },
+                { col: 'full-width', row: 4 }
+            ];
+
+            secciones.forEach((sec, idx) => {
+                const num = idx + 1;
+                const respuestasSec = respuestas[sec.id] || [];
+                const claseCol = layout[idx]?.col || '';
+
+                html += `
+                    <div class="tarjeta-vision seccion-${num} ${claseCol}">
+                        <span class="numero">${String(num).padStart(2, '0')}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">${sec.icono}</span>
+                            <span class="titulo">${sec.titulo}</span>
+                        </div>
+                        ${sec.subtitulo ? `<div class="subtitulo">${sec.subtitulo}</div>` : ''}
+                        <div class="mt-2 space-y-1">
+                `;
+
+                // Mostrar primeras 3 respuestas
+                sec.preguntas.forEach((pregunta, idxP) => {
+                    const respuesta = respuestasSec[idxP] || 'No respondido';
+                    if (idxP < 3) {
+                        html += `
+                            <div class="respuesta">
+                                <strong>${idxP + 1}.</strong> ${respuesta.length > 80 ? respuesta.substring(0, 80) + '...' : respuesta}
+                            </div>
+                        `;
+                    }
+                });
+
+                // Botón "Ver más" si hay más de 3 respuestas
+                if (sec.preguntas.length > 3) {
+                    html += `
+                        <div class="ver-mas-btn" onclick="toggleRespuestas(this)">+ Ver más respuestas</div>
+                        <div style="display:none;" class="respuestas-extra">
+                    `;
+                    sec.preguntas.forEach((pregunta, idxP) => {
+                        if (idxP >= 3) {
+                            const respuesta = respuestasSec[idxP] || 'No respondido';
+                            html += `
+                                <div class="respuesta">
+                                    <strong>${idxP + 1}.</strong> ${respuesta}
+                                </div>
+                            `;
+                        }
+                    });
+                    html += `</div>`;
+                }
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Dibujar líneas conectoras después de renderizar
+            setTimeout(dibujarLineas, 150);
+
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        function toggleRespuestas(el) {
+            const extra = el.nextElementSibling;
+            if (extra.style.display === 'none') {
+                extra.style.display = 'block';
+                el.textContent = '− Ver menos respuestas';
+            } else {
+                extra.style.display = 'none';
+                el.textContent = '+ Ver más respuestas';
+            }
+        }
+
+        function dibujarLineas() {
+            const svg = document.querySelector('.mapa-lineas');
+            if (!svg) return;
+
+            const tarjetas = document.querySelectorAll('.tarjeta-vision');
+            if (tarjetas.length < 2) return;
+
+            const svgRect = svg.getBoundingClientRect();
+            const svgWidth = svgRect.width || 800;
+            const svgHeight = svgRect.height || 600;
+
+            let lineas = '';
+
+            // Conectar secciones en orden (1→2, 2→3, 3→4, etc.)
+            for (let i = 0; i < tarjetas.length - 1; i++) {
+                const from = tarjetas[i];
+                const to = tarjetas[i + 1];
+
+                const fromRect = from.getBoundingClientRect();
+                const toRect = to.getBoundingClientRect();
+
+                const x1 = (fromRect.left + fromRect.width / 2 - svgRect.left) / svgWidth * 100;
+                const y1 = (fromRect.top + fromRect.height / 2 - svgRect.top) / svgHeight * 100;
+                const x2 = (toRect.left + toRect.width / 2 - svgRect.left) / svgWidth * 100;
+                const y2 = (toRect.top + toRect.height / 2 - svgRect.top) / svgHeight * 100;
+
+                lineas += `
+                    <path d="M ${x1} ${y1} Q ${(x1+x2)/2} ${y1 + (y2-y1)*0.4} ${x2} ${y2}" 
+                          stroke="rgba(139, 92, 246, 0.25)" 
+                          stroke-width="2" 
+                          fill="none" 
+                          stroke-dasharray="6, 4" />
+                `;
+            }
+
+            const container = document.getElementById('lineas-conectoras');
+            if (container) {
+                container.innerHTML = lineas;
+            }
+        }
+
+        // Redibujar líneas al cambiar el tamaño de la ventana
+        window.addEventListener('resize', function() {
+            if (pasoActual === 4) {
+                setTimeout(dibujarLineas, 300);
+            }
+        });
+
+        // ============================================================
+        // 8. GENERACIÓN DE PDF
+        // ============================================================
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            // Fondo
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 297, 'F');
+
+            // Línea decorativa superior
+            doc.setDrawColor(139, 92, 246);
+            doc.setLineWidth(2);
+            doc.line(20, 25, 190, 25);
+
+            // Título principal
+            doc.setFontSize(24);
+            doc.setTextColor(139, 92, 246);
+            doc.text('🌟 MI TABLERO DE VISIÓN', 105, 48, { align: 'center' });
+
+            // Datos del estudiante
+            doc.setDrawColor(30, 27, 75);
+            doc.setFillColor(30, 27, 75);
+            doc.roundedRect(20, 60, 170, 22, 4, 4, 'FD');
+            doc.setFontSize(10);
+            doc.setTextColor(200, 200, 200);
+            doc.text(`Nombre: ${nombre}`, 28, 72);
+            doc.text(`Grupo: ${grupo}`, 28, 80);
+            doc.setTextColor(139, 92, 246);
+            doc.text(new Date().toLocaleDateString('es-MX'), 180, 72, { align: 'right' });
+
+            // Secciones
+            let yPos = 100;
+            doc.setFontSize(9);
+            secciones.forEach((sec, idx) => {
+                const num = idx + 1;
+                const respuestasSec = respuestas[sec.id] || [];
+
+                if (yPos > 250) {
+                    doc.addPage();
+                    doc.setFillColor(15, 23, 42);
+                    doc.rect(0, 0, 210, 297, 'F');
+                    yPos = 20;
+                }
+
+                doc.setFontSize(11);
+                doc.setTextColor(167, 139, 250);
+                doc.text(`${String(num).padStart(2, '0')}. ${sec.icono} ${sec.titulo}`, 20, yPos);
+                yPos += 5;
+                if (sec.subtitulo) {
+                    doc.setFontSize(7);
+                    doc.setTextColor(139, 92, 246);
+                    doc.text(sec.subtitulo, 22, yPos);
+                    yPos += 4;
+                }
+
+                doc.setFontSize(8);
+                doc.setTextColor(200, 200, 200);
+                sec.preguntas.forEach((pregunta, idxP) => {
+                    const respuesta = respuestasSec[idxP] || 'No respondido';
+                    const lines = doc.splitTextToSize(`• ${respuesta}`, 165);
+                    doc.text(lines, 22, yPos);
+                    yPos += (lines.length * 4.5) + 2;
+                });
+
+                yPos += 4;
+                if (idx < secciones.length - 1) {
+                    doc.setDrawColor(51, 65, 85);
+                    doc.line(20, yPos, 190, yPos);
+                    yPos += 4;
+                }
+            });
+
+            // Pie de página
+            doc.setFontSize(10);
+            doc.setTextColor(247, 201, 72);
+            doc.text('"YO ELIJO MI CAMINO, YO DECIDO MI FUTURO, YO CONSTRUYO MI HISTORIA."', 105, yPos + 10, { align: 'center' });
+
+            doc.setDrawColor(139, 92, 246);
+            doc.line(20, yPos + 18, 190, yPos + 18);
+            doc.setFontSize(7);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Documento generado automáticamente - SOE UAEMex', 105, yPos + 26, { align: 'center' });
+
+            doc.save('Tablero_Vision_' + nombre.replace(/\s/g, '_') + '.pdf');
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        // ============================================================
+        // 9. INICIALIZAR
+        // ============================================================
+        irPaso(0);
+    </script>
+
+</body>
+</html>

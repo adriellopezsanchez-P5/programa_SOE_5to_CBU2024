@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mundo 2 · Violencia Intrafamiliar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* ===== ESTILOS COMPLETOS ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 30px 35px;
+            max-width: 950px;
+            width: 100%;
+        }
+        .btn-paso {
+            background: #ffa94d;
+            color: #0f172a;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 4px 0 #cc7a2d;
+        }
+        .btn-paso:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #cc7a2d; }
+        .btn-paso:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #cc7a2d; }
+        .btn-secundario {
+            background: transparent;
+            color: #94a3b8;
+            padding: 10px 20px;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-secundario:hover { background: rgba(255,255,255,0.05); border-color: #64748b; }
+        .btn-volver-lab {
+            display: inline-block;
+            background: #f7c948;
+            color: #0d0d1a;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        .btn-volver-lab:hover { background: #e0b030; transform: translateY(-2px); }
+        .paso { display: none; }
+        .paso.activo { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .progress-bar { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-bottom: 25px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #ffa94d, #ff6b6b); transition: width 0.5s; width: 14%; }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        input, textarea {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+            transition: border 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #ffa94d;
+        }
+        .opcion-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 12px 16px;
+            margin: 6px 0;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #e0e7ff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+        }
+        .opcion-btn:hover { background: rgba(255,255,255,0.1); border-color: #ffa94d; }
+        .opcion-btn.seleccionada { background: rgba(255, 169, 77, 0.2); border-color: #ffa94d; }
+        .opcion-btn.correcta { background: rgba(16, 185, 129, 0.2); border-color: #10b981; }
+        .opcion-btn.incorrecta { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+        .card-caso {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 12px 0;
+            border-left: 4px solid #ffa94d;
+        }
+        .dashboard-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 16px 20px;
+            transition: all 0.3s;
+        }
+        .dashboard-card:hover { background: rgba(255,255,255,0.06); }
+        .etiqueta-nivel {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .nivel-bajo { background: #22c55e; color: #0f172a; }
+        .nivel-medio { background: #f59e0b; color: #0f172a; }
+        .nivel-alto { background: #ef4444; color: white; }
+        .pregunta-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+        .pregunta-card .pregunta-texto {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #e0e7ff;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel">
+
+        <!-- Barra de progreso -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Título -->
+        <div class="flex items-center gap-3 mb-4">
+            <span class="text-4xl">🛡️</span>
+            <div>
+                <p class="text-xs font-bold text-orange-400 uppercase tracking-widest">Mundo 2</p>
+                <h1 class="text-2xl font-black text-white">Violencia Intrafamiliar</h1>
+                <p class="text-sm text-slate-400">Identifica, previene y actúa</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 0: INICIO ========= -->
+        <div id="paso0" class="paso activo">
+            <h2 class="text-xl font-bold text-orange-300 mb-4">🎯 Bienvenido al Laboratorio</h2>
+            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700 mb-6">
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    En esta actividad exploraremos la <strong class="text-orange-300">violencia intrafamiliar</strong>: 
+                    qué es, cómo se manifiesta, y lo más importante, <strong class="text-orange-300">a dónde acudir</strong> si tú o alguien que conoces está pasando por esta situación.
+                </p>
+                <p class="text-sm text-slate-400 mt-3">📌 <strong>Instrucciones:</strong></p>
+                <ul class="text-sm text-slate-400 list-disc list-inside space-y-1 mt-1">
+                    <li>Observa el video "No estás solo/a" con atención.</li>
+                    <li>Responde las preguntas sobre el video.</li>
+                    <li>Analiza 3 casos prácticos de violencia.</li>
+                    <li>Construye tu "Mochila de Emergencia" (redes de apoyo).</li>
+                    <li>Descarga tu evidencia en PDF o toma captura de pantalla del dashboard.</li>
+                </ul>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">✏️ Nombre completo:</label>
+                    <input type="text" id="nombreAlumno" placeholder="Ej: García Pérez Ana Sofía" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">📚 Grupo:</label>
+                    <input type="text" id="grupoAlumno" placeholder="Ej: 5to A" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+            </div>
+            <button class="btn-paso w-full" onclick="iniciarLaboratorio()">Comenzar actividad ➔</button>
+        </div>
+
+        <!-- ========= PASO 1: VIDEO + PREGUNTAS (CON RANDOM) ========= -->
+        <div id="paso1" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-orange-300">🎥 No estás solo/a</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(0)">⬅ Regresar</button>
+            </div>
+            <div class="bg-orange-900/20 border border-orange-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-orange-300">Instrucción:</strong> Observa con atención el video. Después responde las preguntas.
+                </p>
+            </div>
+
+            <!-- Video embebido -->
+            <div class="video-container mb-6">
+                <iframe src="https://www.youtube.com/embed/rw5sJ53aFj4" title="No estás solo/a - Violencia intrafamiliar" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+
+            <!-- Contenedor dinámico de preguntas -->
+            <div id="preguntasContainer" class="space-y-4">
+                <!-- Las preguntas se inyectan aquí con JavaScript -->
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(0)">⬅ Regresar</button>
+                <button class="btn-paso" id="btnValidarVideo" onclick="validarVideo()">✅ Validar respuestas</button>
+                <button class="btn-paso" id="btnSiguienteVideo" style="display:none;" onclick="irPaso(2)">📝 Analizar casos ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 2: ANÁLISIS DE CASOS ========= -->
+        <div id="paso2" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-orange-300">🧠 Análisis de casos</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(1)">⬅ Regresar</button>
+            </div>
+            <div class="bg-orange-900/20 border border-orange-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-orange-300">Instrucción:</strong> Lee cada caso y selecciona el tipo de violencia, el nivel de riesgo y la acción recomendada.
+                </p>
+            </div>
+
+            <!-- CASO 1 -->
+            <div class="card-caso">
+                <h3 class="text-sm font-bold text-orange-300">🔴 Caso 1: Carlos (16 años)</h3>
+                <p class="text-sm text-slate-300 mt-1">Su padre le dice que "no sirve para nada". Su madrastra revisa su mochila y exige sus contraseñas. Carlos se aísla y ha bajado su rendimiento.</p>
+                <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold">Tipo de violencia:</p>
+                        <div class="opcion-btn" onclick="seleccionarCaso(0, 'tipo', this, 'psicologica')">Psicológica</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(0, 'tipo', this, 'patrimonial')">Patrimonial</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(0, 'tipo', this, 'ambas')">Ambas</div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold">Nivel de riesgo:</p>
+                        <div class="opcion-btn" onclick="seleccionarCaso(0, 'riesgo', this, 'bajo')">Bajo</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(0, 'riesgo', this, 'medio')">Medio</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(0, 'riesgo', this, 'alto')">Alto</div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold">Acción recomendada:</p>
+                        <div class="opcion-btn" onclick="seleccionarCaso(0, 'accion', this, 'soe')">Acudir al SOE</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(0, 'accion', this, 'tutor')">Hablar con tutor</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(0, 'accion', this, 'linea')">Llamar a Línea Sin Violencia</div>
+                    </div>
+                </div>
+                <div id="fb-caso-0" class="text-xs font-bold mt-2"></div>
+            </div>
+
+            <!-- CASO 2 -->
+            <div class="card-caso">
+                <h3 class="text-sm font-bold text-orange-300">🔴 Caso 2: Valentina (15 años)</h3>
+                <p class="text-sm text-slate-300 mt-1">Llega con moretones, dice que "se cayó". Su padrastro la cuida, su madre está ausente. Ha faltado a clases y su rendimiento bajó.</p>
+                <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold">Tipo de violencia:</p>
+                        <div class="opcion-btn" onclick="seleccionarCaso(1, 'tipo', this, 'fisica')">Física</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(1, 'tipo', this, 'negligencia')">Negligencia</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(1, 'tipo', this, 'ambas2')">Ambas</div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold">Nivel de riesgo:</p>
+                        <div class="opcion-btn" onclick="seleccionarCaso(1, 'riesgo', this, 'bajo')">Bajo</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(1, 'riesgo', this, 'medio')">Medio</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(1, 'riesgo', this, 'alto')">Alto</div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold">Acción recomendada:</p>
+                        <div class="opcion-btn" onclick="seleccionarCaso(1, 'accion', this, 'soe')">Acudir al SOE</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(1, 'accion', this, 'denuncia')">Denunciar al MP</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(1, 'accion', this, 'linea')">Llamar a Línea Sin Violencia</div>
+                    </div>
+                </div>
+                <div id="fb-caso-1" class="text-xs font-bold mt-2"></div>
+            </div>
+
+            <!-- CASO 3 -->
+            <div class="card-caso">
+                <h3 class="text-sm font-bold text-orange-300">🔴 Caso 3: Diego (17 años)</h3>
+                <p class="text-sm text-slate-300 mt-1">Su novia lo amenaza con difundir fotos íntimas si la deja. Le dice que "si la deja, se va a suicidar". Diego no duerme bien y tiene miedo.</p>
+                <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold">Tipo de violencia:</p>
+                        <div class="opcion-btn" onclick="seleccionarCaso(2, 'tipo', this, 'psicologica')">Psicológica</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(2, 'tipo', this, 'sexual')">Sexual (difusión)</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(2, 'tipo', this, 'ambas3')">Ambas</div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold">Nivel de riesgo:</p>
+                        <div class="opcion-btn" onclick="seleccionarCaso(2, 'riesgo', this, 'bajo')">Bajo</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(2, 'riesgo', this, 'medio')">Medio</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(2, 'riesgo', this, 'alto')">Alto</div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-bold">Acción recomendada:</p>
+                        <div class="opcion-btn" onclick="seleccionarCaso(2, 'accion', this, 'soe')">Acudir al SOE</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(2, 'accion', this, 'denuncia')">Denunciar al MP</div>
+                        <div class="opcion-btn" onclick="seleccionarCaso(2, 'accion', this, 'linea')">Llamar a Línea Sin Violencia</div>
+                    </div>
+                </div>
+                <div id="fb-caso-2" class="text-xs font-bold mt-2"></div>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(1)">⬅ Regresar</button>
+                <button class="btn-paso" id="btnValidarCasos" onclick="validarCasos()">✅ Validar casos</button>
+                <button class="btn-paso" id="btnSiguienteCasos" style="display:none;" onclick="irPaso(3)">🗺️ Redes de apoyo ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 3: REDES DE APOYO ========= -->
+        <div id="paso3" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-orange-300">🗺️ Mochila de Emergencia</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(2)">⬅ Regresar</button>
+            </div>
+            <div class="bg-orange-900/20 border border-orange-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-orange-300">Instrucción:</strong> Selecciona las instituciones a las que acudirías en caso de violencia y escribe una ruta crítica de acción.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                <div class="bg-slate-800/30 p-3 rounded-xl border border-slate-700">
+                    <label class="text-sm text-slate-300 flex items-center gap-2">
+                        <input type="checkbox" id="red-soe" class="accent-orange-400" /> 
+                        <strong>SOE</strong> - Apoyo psicológico y académico
+                    </label>
+                </div>
+                <div class="bg-slate-800/30 p-3 rounded-xl border border-slate-700">
+                    <label class="text-sm text-slate-300 flex items-center gap-2">
+                        <input type="checkbox" id="red-tutor" class="accent-orange-400" /> 
+                        <strong>Tutoría Académica</strong> - Acompañamiento y seguimiento
+                    </label>
+                </div>
+                <div class="bg-slate-800/30 p-3 rounded-xl border border-slate-700">
+                    <label class="text-sm text-slate-300 flex items-center gap-2">
+                        <input type="checkbox" id="red-dif" class="accent-orange-400" /> 
+                        <strong>DIF local</strong> - Asistencia social y legal
+                    </label>
+                </div>
+                <div class="bg-slate-800/30 p-3 rounded-xl border border-slate-700">
+                    <label class="text-sm text-slate-300 flex items-center gap-2">
+                        <input type="checkbox" id="red-procuraduria" class="accent-orange-400" /> 
+                        <strong>Procuraduría de Protección</strong> - Defensa de derechos NNA
+                    </label>
+                </div>
+                <div class="bg-slate-800/30 p-3 rounded-xl border border-slate-700">
+                    <label class="text-sm text-slate-300 flex items-center gap-2">
+                        <input type="checkbox" id="red-linea" class="accent-orange-400" /> 
+                        <strong>Línea Sin Violencia (800 10 84 053)</strong> - Atención 24/7
+                    </label>
+                </div>
+                <div class="bg-slate-800/30 p-3 rounded-xl border border-slate-700">
+                    <label class="text-sm text-slate-300 flex items-center gap-2">
+                        <input type="checkbox" id="red-mp" class="accent-orange-400" /> 
+                        <strong>Ministerio Público</strong> - Denuncias y protección legal
+                    </label>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="text-sm font-bold text-slate-300 block mb-2">📝 Ruta crítica de acción (pasos concretos):</label>
+                <textarea id="rutaCritica" rows="3" placeholder="Ej: 1) Hablar con mi tutor. 2) Acudir al SOE. 3) Llamar a la Línea Sin Violencia si la situación empeora..." class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                <div class="flex justify-between items-center mt-2">
+                    <span id="contadorRuta" class="text-xs text-slate-500">0 / 50 caracteres mín.</span>
+                    <span id="fb-ruta" class="text-xs font-bold"></span>
+                </div>
+            </div>
+            <div class="flex justify-between mt-4">
+                <button class="btn-secundario" onclick="irPaso(2)">⬅ Regresar</button>
+                <button class="btn-paso" id="btnValidarRuta" onclick="validarRuta()">✅ Validar ruta</button>
+                <button class="btn-paso" id="btnSiguienteRuta" style="display:none;" onclick="irPasoConCarga(4)">📊 Ver dashboard ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 4: TRANSICIÓN ========= -->
+        <div id="paso4" class="paso text-center">
+            <div class="py-12">
+                <div class="text-6xl mb-6 animate-bounce">⏳</div>
+                <h2 class="text-2xl font-bold text-orange-300 mb-3">Enviando tu información...</h2>
+                <p class="text-slate-400 text-sm">Estamos procesando tus respuestas y generando tu evidencia.</p>
+                <div class="w-48 h-2 bg-slate-700 rounded-full mx-auto mt-6 overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-orange-400 to-rose-500 rounded-full" id="barraCarga" style="width: 0%;"></div>
+                </div>
+                <p class="text-xs text-slate-500 mt-3" id="textoCarga">Preparando archivo...</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 5: DASHBOARD (CON NOTA DE CAPTURA) ========= -->
+        <div id="paso5" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-orange-300">📊 Dashboard de resultados</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(3)">⬅ Regresar</button>
+            </div>
+
+            <div class="bg-orange-900/20 border border-orange-500/30 p-5 rounded-xl mb-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <p class="text-xs text-slate-400">Estudiante</p>
+                        <p class="text-lg font-bold text-white" id="dashNombre">--</p>
+                        <p class="text-sm text-slate-400" id="dashGrupo">--</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400">Fecha</p>
+                        <p class="text-sm text-slate-300" id="dashFecha">--</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400">Reflexión</p>
+                        <p class="text-sm text-orange-300 font-bold">"Pedir ayuda es un acto de fortaleza"</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen de casos -->
+            <div class="dashboard-card mb-6">
+                <h3 class="text-sm font-bold text-orange-300 mb-4">📋 Análisis de casos</h3>
+                <div id="dashCasos" class="space-y-2">
+                    <!-- Inyectado por JS -->
+                </div>
+            </div>
+
+            <!-- Redes de apoyo -->
+            <div class="dashboard-card">
+                <h3 class="text-sm font-bold text-orange-300 mb-4">🗺️ Mochila de Emergencia</h3>
+                <div id="dashRedes" class="space-y-2">
+                    <!-- Inyectado por JS -->
+                </div>
+                <div class="mt-3 p-3 bg-slate-800/30 rounded-xl border border-slate-700">
+                    <p class="text-xs text-slate-400">📝 Ruta crítica:</p>
+                    <p class="text-sm text-slate-300" id="dashRuta">--</p>
+                </div>
+            </div>
+
+            <!-- ===== SECCIÓN DE DESCARGA CON NOTA DE CAPTURA ===== -->
+            <div class="mt-6 p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl">
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex-1 min-w-[200px]">
+                        <button class="btn-paso w-full md:w-auto" onclick="generarPDF()">
+                            ⬇️ Descargar mi evidencia en PDF
+                        </button>
+                    </div>
+                    <div class="flex-1 min-w-[200px] text-center md:text-right">
+                        <p class="text-xs text-slate-400">
+                            📌 <span class="text-amber-300 font-bold">Alternativa:</span> 
+                            Si el PDF no se genera correctamente, puedes tomar una 
+                            <span class="text-amber-300 font-bold">captura de pantalla</span> 
+                            de este dashboard y subirla como evidencia.
+                        </p>
+                        <button onclick="alert('📸 Presiona Ctrl+Shift+S (Windows) o Cmd+Shift+S (Mac) para capturar toda la pantalla, o usa la herramienta de recorte de tu sistema.')" 
+                                class="mt-2 text-xs text-amber-400 underline hover:text-amber-300 transition-colors">
+                            🖼️ ¿Cómo tomar una captura?
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-3 text-center">
+                    <button class="btn-paso" id="btnEnviarFormulario" style="display:none;" onclick="irPaso(6)">
+                        📤 Enviar evidencia
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========= PASO 6: ENVÍO ========= -->
+        <div id="paso6" class="paso text-center">
+            <div class="py-8">
+                <span class="text-6xl block mb-4">📤</span>
+                <h2 class="text-2xl font-bold text-orange-300 mb-3">¡Listo para entregar!</h2>
+                <p class="text-slate-400 text-sm mb-6">
+                    Ya tienes tu evidencia en PDF (o tu captura de pantalla). Ahora solo debes subirla al formulario oficial.
+                </p>
+
+                <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-xl text-left mb-6">
+                    <p class="text-sm text-slate-300 font-bold mb-2">📌 Instrucciones importantes:</p>
+                    <ul class="text-sm text-slate-400 list-disc list-inside space-y-2">
+                        <li>Llena <strong class="text-orange-300">todos</strong> los campos del formulario.</li>
+                        <li>Escribe tu <strong class="text-orange-300">número de cuenta</strong> sin espacios al inicio ni al final.</li>
+                        <li>El número de cuenta es tu <strong class="text-orange-300">identificador oficial</strong> para validar tu entrega.</li>
+                    </ul>
+                </div>
+
+                <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=nn_hqb6Q0EGE62pI6-n-wMN_dUxOwbVAu1QaWfm5rm1URDJESlVVUlhYMlpUMEtFVVlONVVPV1gzNS4u" target="_blank" class="btn-paso inline-block text-center w-full" style="text-decoration:none;">
+                    📤 Subir mi evidencia al formulario
+                </a>
+
+                <div class="mt-6">
+                    <a href="../index.html" class="btn-volver-lab">🏠 Regresar a casa</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // =====================================================
+        // 1. DATOS DE LAS PREGUNTAS DEL VIDEO
+        // =====================================================
+        const preguntasData = [{
+            pregunta: "Según datos de REDIM, ¿qué grupo de edad concentra la gran mayoría (80.6%) de los casos de violencia familiar atendidos en hospitales?",
+            opciones: [
+                { texto: "Niñas y niños de 1 a 5 años", correcta: false },
+                { texto: "Niñas y niños de 6 a 11 años", correcta: false },
+                { texto: "Adolescentes de 12 a 17 años", correcta: true },
+                { texto: "Jóvenes de 18 a 21 años", correcta: false }
+            ]
+        }, {
+            pregunta: "¿Qué artículo de la Constitución Mexicana garantiza el derecho a una vida libre de violencias?",
+            opciones: [
+                { texto: "Artículo 3º", correcta: false },
+                { texto: "Artículo 4º", correcta: true },
+                { texto: "Artículo 27", correcta: false },
+                { texto: "Artículo 123", correcta: false }
+            ]
+        }, {
+            pregunta: "Exigir contraseñas de redes sociales o revisar el celular sin consentimiento es un ejemplo de:",
+            opciones: [
+                { texto: "Violencia física", correcta: false },
+                { texto: "Violencia psicológica", correcta: false },
+                { texto: "Violencia patrimonial", correcta: true },
+                { texto: "Negligencia", correcta: false }
+            ]
+        }, {
+            pregunta: "Dentro de la escuela, ¿qué área ofrece apoyo psicológico y académico sin juzgar?",
+            opciones: [
+                { texto: "Dirección General", correcta: false },
+                { texto: "Servicio de Orientación Educativa (SOE)", correcta: true },
+                { texto: "Tutoría Académica", correcta: false },
+                { texto: "El DIF local", correcta: false }
+            ]
+        }, {
+            pregunta: "¿Cuál es el número de la 'Línea Sin Violencia', atención 24/7?",
+            opciones: [
+                { texto: "800 715 2000", correcta: false },
+                { texto: "01-800-822-4460", correcta: false },
+                { texto: "800 10 84 053", correcta: true },
+                { texto: "800 900 9000", correcta: false }
+            ]
+        }];
+
+        // =====================================================
+        // 2. FUNCIONES AUXILIARES
+        // =====================================================
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // =====================================================
+        // 3. ESTADO GLOBAL
+        // =====================================================
+        let pasoActual = 0;
+        const totalPasos = 7;
+        let nombre = '';
+        let grupo = '';
+        let respuestasVideo = [null, null, null, null, null];
+        let preguntasRenderizadas = [];
+
+        const casosRespuestas = [
+            { tipo: null, riesgo: null, accion: null },
+            { tipo: null, riesgo: null, accion: null },
+            { tipo: null, riesgo: null, accion: null }
+        ];
+        const casosCorrectos = [
+            { tipo: 'ambas', riesgo: 'medio', accion: 'soe' },
+            { tipo: 'ambas2', riesgo: 'alto', accion: 'denuncia' },
+            { tipo: 'ambas3', riesgo: 'alto', accion: 'denuncia' }
+        ];
+
+        let redesSeleccionadas = [];
+        let rutaCritica = '';
+
+        // =====================================================
+        // 4. NAVEGACIÓN
+        // =====================================================
+        function irPaso(numero) {
+            document.querySelectorAll('.paso').forEach(el => el.classList.remove('activo'));
+            document.getElementById('paso' + numero).classList.add('activo');
+            pasoActual = numero;
+            document.getElementById('progressFill').style.width = ((numero / totalPasos) * 100) + '%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function iniciarLaboratorio() {
+            nombre = document.getElementById('nombreAlumno').value.trim();
+            grupo = document.getElementById('grupoAlumno').value.trim();
+            if (nombre.length < 3 || grupo.length < 1) {
+                alert('Por favor, llena todos los campos (nombre y grupo).');
+                return;
+            }
+            irPaso(1);
+        }
+
+        // =====================================================
+        // 5. RENDERIZADO DE PREGUNTAS (CON RANDOM)
+        // =====================================================
+        function renderizarPreguntas() {
+            const container = document.getElementById('preguntasContainer');
+            container.innerHTML = '';
+            preguntasRenderizadas = [];
+
+            preguntasData.forEach((item, idx) => {
+                const opcionesBarajadas = shuffleArray([...item.opciones]);
+                preguntasRenderizadas.push(opcionesBarajadas);
+
+                let html = `
+                    <div class="pregunta-card" data-pregunta="${idx}">
+                        <p class="pregunta-texto">${idx+1}. ${item.pregunta}</p>
+                        <div class="opciones-container">
+                `;
+                opcionesBarajadas.forEach((opcion, optIdx) => {
+                    html += `
+                        <div class="opcion-btn" onclick="seleccionarRespuestaVideo(${idx}, ${optIdx}, this)">
+                            ${opcion.texto}
+                        </div>
+                    `;
+                });
+                html += `
+                        </div>
+                        <div id="fb-video-${idx}" class="text-xs font-bold mt-2"></div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        // =====================================================
+        // 6. SELECCIÓN DE RESPUESTAS (VIDEO)
+        // =====================================================
+        function seleccionarRespuestaVideo(preguntaIdx, optIdx, el) {
+            const contenedor = el.closest('.pregunta-card');
+            contenedor.querySelectorAll('.opcion-btn').forEach(btn => btn.classList.remove('seleccionada'));
+            el.classList.add('seleccionada');
+            respuestasVideo[preguntaIdx] = optIdx;
+        }
+
+        // =====================================================
+        // 7. VALIDACIÓN DE VIDEO
+        // =====================================================
+        function validarVideo() {
+            let todasCorrectas = true;
+            for (let i = 0; i < preguntasData.length; i++) {
+                const fb = document.getElementById('fb-video-' + i);
+                const seleccionada = respuestasVideo[i];
+                const opciones = preguntasRenderizadas[i];
+                
+                if (seleccionada !== null && opciones[seleccionada].correcta === true) {
+                    fb.innerHTML = '✅ Correcto';
+                    fb.className = 'text-xs font-bold mt-2 text-emerald-400';
+                } else {
+                    fb.innerHTML = '❌ Incorrecto. Revisa el video.';
+                    fb.className = 'text-xs font-bold mt-2 text-rose-400';
+                    todasCorrectas = false;
+                }
+            }
+            if (todasCorrectas) {
+                document.getElementById('btnValidarVideo').style.display = 'none';
+                document.getElementById('btnSiguienteVideo').style.display = 'inline-block';
+            } else {
+                document.getElementById('btnValidarVideo').style.display = 'inline-block';
+                document.getElementById('btnSiguienteVideo').style.display = 'none';
+            }
+        }
+
+        // =====================================================
+        // 8. SELECCIÓN DE CASOS (CORREGIDO)
+        // =====================================================
+        function seleccionarCaso(casoIdx, campo, el, valor) {
+            const parent = el.parentElement;
+            parent.querySelectorAll('.opcion-btn').forEach(btn => btn.classList.remove('seleccionada'));
+            el.classList.add('seleccionada');
+            casosRespuestas[casoIdx][campo] = valor;
+        }
+
+        // =====================================================
+        // 9. VALIDACIÓN DE CASOS
+        // =====================================================
+        function validarCasos() {
+            let todosCorrectos = true;
+            for (let i = 0; i < 3; i++) {
+                const fb = document.getElementById('fb-caso-' + i);
+                const c = casosRespuestas[i];
+                const correcto = casosCorrectos[i];
+                const tipoOk = c.tipo === correcto.tipo;
+                const riesgoOk = c.riesgo === correcto.riesgo;
+                const accionOk = c.accion === correcto.accion;
+                
+                if (tipoOk && riesgoOk && accionOk) {
+                    fb.innerHTML = '✅ Caso analizado correctamente';
+                    fb.className = 'text-xs font-bold mt-2 text-emerald-400';
+                } else {
+                    let errores = [];
+                    if (!tipoOk) errores.push('tipo de violencia');
+                    if (!riesgoOk) errores.push('nivel de riesgo');
+                    if (!accionOk) errores.push('acción recomendada');
+                    fb.innerHTML = '❌ Revisa: ' + errores.join(', ');
+                    fb.className = 'text-xs font-bold mt-2 text-rose-400';
+                    todosCorrectos = false;
+                }
+            }
+            if (todosCorrectos) {
+                document.getElementById('btnValidarCasos').style.display = 'none';
+                document.getElementById('btnSiguienteCasos').style.display = 'inline-block';
+            } else {
+                document.getElementById('btnValidarCasos').style.display = 'inline-block';
+                document.getElementById('btnSiguienteCasos').style.display = 'none';
+            }
+        }
+
+        // =====================================================
+        // 10. REDES DE APOYO Y RUTA
+        // =====================================================
+        function validarRuta() {
+            const checkboxes = ['red-soe', 'red-tutor', 'red-dif', 'red-procuraduria', 'red-linea', 'red-mp'];
+            let seleccionadas = checkboxes.filter(id => document.getElementById(id).checked);
+            redesSeleccionadas = seleccionadas;
+            
+            rutaCritica = document.getElementById('rutaCritica').value.trim();
+            const fbRuta = document.getElementById('fb-ruta');
+            const contador = document.getElementById('contadorRuta');
+
+            if (seleccionadas.length >= 2 && rutaCritica.length >= 50) {
+                fbRuta.innerHTML = '✅ Ruta completa';
+                fbRuta.className = 'text-xs font-bold text-emerald-400';
+                contador.textContent = rutaCritica.length + ' / 50 caracteres (✅)';
+                document.getElementById('btnValidarRuta').style.display = 'none';
+                document.getElementById('btnSiguienteRuta').style.display = 'inline-block';
+            } else {
+                let msg = [];
+                if (seleccionadas.length < 2) msg.push('Selecciona al menos 2 redes de apoyo');
+                if (rutaCritica.length < 50) msg.push('Escribe al menos 50 caracteres en la ruta crítica');
+                fbRuta.innerHTML = '❌ ' + msg.join('; ');
+                fbRuta.className = 'text-xs font-bold text-rose-400';
+                contador.textContent = rutaCritica.length + ' / 50 caracteres';
+                document.getElementById('btnValidarRuta').style.display = 'inline-block';
+                document.getElementById('btnSiguienteRuta').style.display = 'none';
+            }
+        }
+
+        // Contador de ruta en tiempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            const rutaText = document.getElementById('rutaCritica');
+            const contador = document.getElementById('contadorRuta');
+            rutaText.addEventListener('input', function() {
+                const len = this.value.length;
+                contador.textContent = len + ' / 50 caracteres';
+                contador.className = len >= 50 ? 'text-xs text-emerald-400' : 'text-xs text-slate-500';
+            });
+            renderizarPreguntas();
+        });
+
+        // =====================================================
+        // 11. TRANSICIÓN
+        // =====================================================
+        function irPasoConCarga(numero) {
+            irPaso(4);
+            let progreso = 0;
+            const barra = document.getElementById('barraCarga');
+            const texto = document.getElementById('textoCarga');
+            const interval = setInterval(() => {
+                progreso += Math.random() * 15;
+                if (progreso >= 100) {
+                    progreso = 100;
+                    clearInterval(interval);
+                    texto.textContent = '✅ ¡Información procesada!';
+                    setTimeout(() => {
+                        irPaso(5);
+                        mostrarDashboard();
+                    }, 800);
+                }
+                barra.style.width = progreso + '%';
+                if (progreso < 30) texto.textContent = 'Validando respuestas...';
+                else if (progreso < 60) texto.textContent = 'Generando evidencia...';
+                else if (progreso < 90) texto.textContent = 'Preparando archivo...';
+            }, 200);
+        }
+
+        // =====================================================
+        // 12. DASHBOARD
+        // =====================================================
+        function mostrarDashboard() {
+            document.getElementById('dashNombre').textContent = nombre;
+            document.getElementById('dashGrupo').textContent = 'Grupo: ' + grupo;
+            document.getElementById('dashFecha').textContent = new Date().toLocaleDateString();
+
+            const contCasos = document.getElementById('dashCasos');
+            const nombresCasos = ['Caso 1: Carlos', 'Caso 2: Valentina', 'Caso 3: Diego'];
+            const tiposMap = {
+                'psicologica': 'Psicológica', 'patrimonial': 'Patrimonial',
+                'ambas': 'Psicológica + Patrimonial', 'fisica': 'Física',
+                'negligencia': 'Negligencia', 'ambas2': 'Física + Negligencia',
+                'sexual': 'Sexual (difusión)', 'ambas3': 'Psicológica + Sexual'
+            };
+            const riesgoMap = { 'bajo': 'Bajo', 'medio': 'Medio', 'alto': 'Alto' };
+            const accionMap = { 'soe': 'Acudir al SOE', 'tutor': 'Hablar con tutor', 'linea': 'Llamar a Línea Sin Violencia', 'denuncia': 'Denunciar al MP' };
+
+            let htmlCasos = '';
+            for (let i = 0; i < 3; i++) {
+                const c = casosRespuestas[i];
+                const correcto = casosCorrectos[i];
+                const tipoOk = c.tipo === correcto.tipo;
+                const riesgoOk = c.riesgo === correcto.riesgo;
+                const accionOk = c.accion === correcto.accion;
+                htmlCasos += `
+                    <div class="p-3 bg-slate-800/30 rounded-xl border border-slate-700">
+                        <p class="text-sm font-bold text-orange-300">${nombresCasos[i]}</p>
+                        <div class="grid grid-cols-3 gap-2 mt-1 text-xs">
+                            <div><span class="text-slate-400">Tipo:</span> <span class="${tipoOk ? 'text-emerald-400' : 'text-rose-400'}">${tiposMap[c.tipo] || 'No seleccionado'} ${tipoOk ? '✅' : '❌'}</span></div>
+                            <div><span class="text-slate-400">Riesgo:</span> <span class="${riesgoOk ? 'text-emerald-400' : 'text-rose-400'}">${riesgoMap[c.riesgo] || 'No seleccionado'} ${riesgoOk ? '✅' : '❌'}</span></div>
+                            <div><span class="text-slate-400">Acción:</span> <span class="${accionOk ? 'text-emerald-400' : 'text-rose-400'}">${accionMap[c.accion] || 'No seleccionado'} ${accionOk ? '✅' : '❌'}</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+            contCasos.innerHTML = htmlCasos;
+
+            const contRedes = document.getElementById('dashRedes');
+            const redesMap = {
+                'red-soe': 'SOE - Apoyo psicológico y académico',
+                'red-tutor': 'Tutoría Académica - Acompañamiento',
+                'red-dif': 'DIF local - Asistencia social y legal',
+                'red-procuraduria': 'Procuraduría de Protección - Defensa de derechos NNA',
+                'red-linea': 'Línea Sin Violencia (800 10 84 053)',
+                'red-mp': 'Ministerio Público - Denuncias y protección legal'
+            };
+            let htmlRedes = '';
+            const checkboxes = ['red-soe', 'red-tutor', 'red-dif', 'red-procuraduria', 'red-linea', 'red-mp'];
+            checkboxes.forEach(id => {
+                if (document.getElementById(id).checked) {
+                    htmlRedes += `<div class="text-sm text-slate-300">✅ ${redesMap[id]}</div>`;
+                }
+            });
+            if (!htmlRedes) htmlRedes = '<div class="text-sm text-slate-400">No seleccionaste redes de apoyo.</div>';
+            contRedes.innerHTML = htmlRedes;
+            document.getElementById('dashRuta').textContent = rutaCritica || 'No escribiste ruta crítica.';
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        // =====================================================
+        // 13. GENERACIÓN DE PDF
+        // =====================================================
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 297, 'F');
+            doc.setDrawColor(255, 169, 77);
+            doc.setLineWidth(2);
+            doc.line(20, 25, 190, 25);
+            doc.setFontSize(22);
+            doc.setTextColor(255, 169, 77);
+            doc.text('🛡️ Violencia Intrafamiliar', 20, 48);
+
+            doc.setDrawColor(30, 41, 59);
+            doc.setFillColor(30, 41, 59);
+            doc.roundedRect(20, 60, 170, 30, 4, 4, 'FD');
+            doc.setFontSize(11);
+            doc.setTextColor(200, 200, 200);
+            doc.text(`Nombre: ${nombre}`, 28, 72);
+            doc.text(`Grupo: ${grupo}`, 28, 82);
+            doc.setTextColor(255, 169, 77);
+            doc.text(new Date().toLocaleDateString(), 160, 72, { align: 'right' });
+
+            doc.setFontSize(16);
+            doc.setTextColor(255, 169, 77);
+            doc.text('📋 Análisis de casos', 20, 105);
+            doc.setDrawColor(51, 65, 85);
+            doc.line(20, 110, 190, 110);
+
+            let yPos = 120;
+            const nombresCasos = ['Caso 1: Carlos', 'Caso 2: Valentina', 'Caso 3: Diego'];
+            const tiposMap = {
+                'psicologica': 'Psicológica', 'patrimonial': 'Patrimonial',
+                'ambas': 'Psicológica + Patrimonial', 'fisica': 'Física',
+                'negligencia': 'Negligencia', 'ambas2': 'Física + Negligencia',
+                'sexual': 'Sexual (difusión)', 'ambas3': 'Psicológica + Sexual'
+            };
+            const riesgoMap = { 'bajo': 'Bajo', 'medio': 'Medio', 'alto': 'Alto' };
+            const accionMap = { 'soe': 'Acudir al SOE', 'tutor': 'Hablar con tutor', 'linea': 'Llamar a Línea Sin Violencia', 'denuncia': 'Denunciar al MP' };
+
+            doc.setFontSize(10);
+            for (let i = 0; i < 3; i++) {
+                const c = casosRespuestas[i];
+                doc.setTextColor(200, 200, 200);
+                doc.text(nombresCasos[i], 20, yPos);
+                yPos += 6;
+                doc.text(`Tipo: ${tiposMap[c.tipo] || 'No seleccionado'}`, 25, yPos);
+                yPos += 5;
+                doc.text(`Riesgo: ${riesgoMap[c.riesgo] || 'No seleccionado'}`, 25, yPos);
+                yPos += 5;
+                doc.text(`Acción: ${accionMap[c.accion] || 'No seleccionado'}`, 25, yPos);
+                yPos += 10;
+            }
+
+            yPos += 4;
+            doc.setFontSize(16);
+            doc.setTextColor(255, 169, 77);
+            doc.text('🗺️ Mochila de Emergencia', 20, yPos);
+            yPos += 6;
+            doc.setDrawColor(51, 65, 85);
+            doc.line(20, yPos, 190, yPos);
+            yPos += 8;
+
+            doc.setFontSize(10);
+            doc.setTextColor(200, 200, 200);
+            const redesMap = {
+                'red-soe': 'SOE - Apoyo psicológico y académico',
+                'red-tutor': 'Tutoría Académica - Acompañamiento',
+                'red-dif': 'DIF local - Asistencia social y legal',
+                'red-procuraduria': 'Procuraduría de Protección - Defensa de derechos NNA',
+                'red-linea': 'Línea Sin Violencia (800 10 84 053)',
+                'red-mp': 'Ministerio Público - Denuncias y protección legal'
+            };
+            const checkboxes = ['red-soe', 'red-tutor', 'red-dif', 'red-procuraduria', 'red-linea', 'red-mp'];
+            let tieneRed = false;
+            checkboxes.forEach(id => {
+                if (document.getElementById(id).checked) {
+                    doc.text(`✅ ${redesMap[id]}`, 22, yPos);
+                    yPos += 6;
+                    tieneRed = true;
+                }
+            });
+            if (!tieneRed) { doc.text('No seleccionaste redes de apoyo.', 22, yPos); yPos += 6; }
+
+            yPos += 4;
+            doc.setTextColor(255, 169, 77);
+            doc.text('📝 Ruta crítica:', 20, yPos);
+            yPos += 6;
+            doc.setTextColor(200, 200, 200);
+            const lines = doc.splitTextToSize(rutaCritica || 'No escribiste ruta crítica.', 170);
+            doc.text(lines, 22, yPos);
+
+            doc.setDrawColor(51, 65, 85);
+            doc.line(20, 280, 190, 280);
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Documento generado automáticamente - SOE UAEMex', 105, 290, { align: 'center' });
+
+            doc.save('Evidencia_ViolenciaIntrafamiliar_' + nombre.replace(/\s/g, '_') + '.pdf');
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        // =====================================================
+        // 14. INICIALIZAR
+        // =====================================================
+        irPaso(0);
+    </script>
+
+</body>
+</html>

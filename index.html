@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOE 5to Semestre · UAEMex</title>
+    
+    <style>
+        /* ===== RESET Y FUENTE PIXELADA ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: #0d0d1a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* ===== FONDO DE BLOQUES ===== */
+        .fondo-bloques {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background-image: 
+                linear-gradient(45deg, #2d4b6e 2%, transparent 2%),
+                linear-gradient(-45deg, #4a7b9b 2%, transparent 2%),
+                linear-gradient(90deg, #1a3a5a 1%, transparent 1%),
+                linear-gradient(0deg, #3a6b8b 1%, transparent 1%);
+            background-size: 50px 50px;
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        .nube {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .nube1 { width: 200px; height: 60px; top: 8%; left: 3%; }
+        .nube2 { width: 300px; height: 70px; top: 18%; right: 5%; }
+        .nube3 { width: 180px; height: 50px; bottom: 20%; left: 8%; }
+        .nube4 { width: 260px; height: 65px; bottom: 12%; right: 10%; }
+
+        /* ===== CONTENEDOR ===== */
+        .contenedor {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(13, 13, 26, 0.85);
+            backdrop-filter: blur(6px);
+            border: 4px solid #f7c948;
+            padding: 30px 25px 40px;
+            box-shadow: 0 0 0 4px #0d0d1a, 0 0 0 8px #f7c948;
+            margin-top: 20px;
+            border-radius: 0;
+        }
+
+        /* ===== ENCABEZADO ===== */
+        .encabezado {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            border-bottom: 4px solid #f7c948;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-uaemex {
+            width: 70px;
+            height: 70px;
+            background: #f7c948;
+            clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #0d0d1a;
+            text-shadow: 2px 2px 0 #fff;
+            border: 3px solid #0d0d1a;
+        }
+
+        .titulo-principal {
+            font-size: 1.8rem;
+            color: #ffffff;
+            text-shadow: 3px 3px 0 #0d0d1a, 5px 5px 0 #f7c948;
+            letter-spacing: 2px;
+            line-height: 1.3;
+        }
+        .titulo-principal small {
+            display: block;
+            font-size: 0.65rem;
+            color: #88c9f0;
+            text-shadow: none;
+            letter-spacing: 3px;
+        }
+
+        .fecha-limite {
+            background: #f7c948;
+            color: #0d0d1a;
+            padding: 10px 20px;
+            border: 3px solid #0d0d1a;
+            font-size: 0.75rem;
+            text-align: center;
+            box-shadow: 4px 4px 0 #0d0d1a;
+        }
+
+        /* ===== TARJETA INTRO ===== */
+        .tarjeta-intro {
+            background: rgba(136, 201, 240, 0.12);
+            border: 4px solid #88c9f0;
+            padding: 25px 25px 20px;
+            margin-bottom: 30px;
+            box-shadow: 6px 6px 0 #0d0d1a;
+            position: relative;
+        }
+        .tarjeta-intro h2 {
+            color: #88c9f0;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 0 #0d0d1a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .tarjeta-intro p {
+            color: #d0dbe8;
+            font-size: 0.7rem;
+            line-height: 1.9;
+            margin-bottom: 10px;
+        }
+        .tarjeta-intro .destacado {
+            color: #f7c948;
+        }
+        .tarjeta-intro .area {
+            display: inline-block;
+            background: rgba(247, 201, 72, 0.15);
+            border: 2px solid #f7c948;
+            padding: 4px 12px;
+            font-size: 0.55rem;
+            color: #f7c948;
+            margin: 3px 4px 3px 0;
+        }
+        .btn-conocer-mas {
+            display: inline-block;
+            background: transparent;
+            color: #88c9f0;
+            padding: 8px 20px;
+            text-decoration: none;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.55rem;
+            border: 3px solid #88c9f0;
+            margin-top: 8px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+        .btn-conocer-mas:hover {
+            background: #88c9f0;
+            color: #0d0d1a;
+            box-shadow: 4px 4px 0 #0d0d1a;
+        }
+
+        /* ===== REGLAS ===== */
+        .reglas {
+            background: rgba(247, 201, 72, 0.08);
+            border-left: 6px solid #f7c948;
+            padding: 15px 20px;
+            margin-bottom: 35px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 40px;
+        }
+        .reglas-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #d0dbe8;
+            font-size: 0.6rem;
+        }
+        .reglas-item .emoji {
+            font-size: 1.2rem;
+        }
+
+        /* ===== GRID ===== */
+        .grid-actividades {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .actividad {
+            background: #1a2a3a;
+            border: 4px solid #88c9f0;
+            padding: 20px 15px 25px;
+            text-align: center;
+            box-shadow: 6px 6px 0 #0d0d1a;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .actividad:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 10px 10px 0 #0d0d1a;
+        }
+
+        .actividad .icono {
+            font-size: 2.8rem;
+            display: block;
+            margin-bottom: 12px;
+            filter: drop-shadow(3px 3px 0 #0d0d1a);
+        }
+
+        .actividad h3 {
+            color: #ffffff;
+            font-size: 0.7rem;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 0 #0d0d1a;
+            letter-spacing: 1px;
+        }
+
+        .actividad .descripcion {
+            color: #b0c4d9;
+            font-size: 0.5rem;
+            line-height: 1.6;
+            margin-bottom: 18px;
+            min-height: 40px;
+        }
+
+        .actividad .btn-jugar {
+            display: inline-block;
+            background: #88c9f0;
+            color: #0d0d1a;
+            padding: 10px 18px;
+            text-decoration: none;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.55rem;
+            border: 3px solid #0d0d1a;
+            box-shadow: 4px 4px 0 #0d0d1a;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .actividad .btn-jugar:hover {
+            background: #6ab0e0;
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 #0d0d1a;
+        }
+
+        /* Colores por mundo */
+        .actividad.mundo1 { border-color: #ff6b6b; }
+        .actividad.mundo1 .btn-jugar { background: #ff6b6b; }
+        .actividad.mundo1 .btn-jugar:hover { background: #e05555; }
+
+        .actividad.mundo2 { border-color: #ffa94d; }
+        .actividad.mundo2 .btn-jugar { background: #ffa94d; }
+        .actividad.mundo2 .btn-jugar:hover { background: #e0913a; }
+
+        .actividad.mundo3 { border-color: #69db7c; }
+        .actividad.mundo3 .btn-jugar { background: #69db7c; }
+        .actividad.mundo3 .btn-jugar:hover { background: #51c56a; }
+
+        .actividad.mundo4 { border-color: #74c0fc; }
+        .actividad.mundo4 .btn-jugar { background: #74c0fc; }
+        .actividad.mundo4 .btn-jugar:hover { background: #5aa8e6; }
+
+        .actividad.mundo5 { border-color: #cc8ce8; }
+        .actividad.mundo5 .btn-jugar { background: #cc8ce8; }
+        .actividad.mundo5 .btn-jugar:hover { background: #b374d0; }
+
+        /* ===== TARJETA FINAL ===== */
+        .tarjeta-final {
+            background: rgba(247, 201, 72, 0.10);
+            border: 4px solid #f7c948;
+            padding: 25px 25px 20px;
+            margin-top: 35px;
+            box-shadow: 6px 6px 0 #0d0d1a;
+            text-align: center;
+        }
+        .tarjeta-final .icono-grande {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .tarjeta-final h2 {
+            color: #f7c948;
+            font-size: 1.1rem;
+            text-shadow: 2px 2px 0 #0d0d1a;
+            margin-bottom: 12px;
+        }
+        .tarjeta-final p {
+            color: #d0dbe8;
+            font-size: 0.65rem;
+            line-height: 1.8;
+            margin-bottom: 18px;
+        }
+        .tarjeta-final .btn-optativas {
+            display: inline-block;
+            background: #f7c948;
+            color: #0d0d1a;
+            padding: 14px 35px;
+            text-decoration: none;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.7rem;
+            border: 4px solid #0d0d1a;
+            box-shadow: 6px 6px 0 #0d0d1a;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .tarjeta-final .btn-optativas:hover {
+            background: #e0b030;
+            transform: translate(2px, 2px);
+            box-shadow: 3px 3px 0 #0d0d1a;
+        }
+        .tarjeta-final .aviso {
+            color: #ff6b6b;
+            font-size: 0.5rem;
+            margin-top: 12px;
+        }
+
+        /* ===== PIE ===== */
+        .pie {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 4px solid #88c9f0;
+            text-align: center;
+            color: #8899aa;
+            font-size: 0.55rem;
+        }
+        .pie .destacado {
+            color: #f7c948;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 700px) {
+            .encabezado { flex-direction: column; align-items: flex-start; }
+            .titulo-principal { font-size: 1.3rem; }
+            .fecha-limite { align-self: stretch; text-align: center; }
+            .grid-actividades { grid-template-columns: 1fr 1fr; }
+            .reglas { flex-direction: column; gap: 8px; }
+        }
+        @media (max-width: 500px) {
+            .grid-actividades { grid-template-columns: 1fr; }
+            .contenedor { padding: 15px; }
+            .actividad .btn-jugar { width: 100%; }
+            .tarjeta-final .btn-optativas { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="fondo-bloques"></div>
+    <div class="nube nube1"></div>
+    <div class="nube nube2"></div>
+    <div class="nube nube3"></div>
+    <div class="nube nube4"></div>
+
+    <div class="contenedor">
+
+        <!-- ENCABEZADO -->
+        <header class="encabezado">
+            <div class="logo-area">
+                <div class="logo-uaemex">UAEM</div>
+                <div class="titulo-principal">
+                    SOE 5to Semestre
+                    <small>Orientación Educativa · CBU 2024</small>
+                </div>
+            </div>
+            <div class="fecha-limite">
+                ⏳ Cierre: 13 de noviembre<br>
+                <span style="font-size:0.55rem;">Entrega tus misiones</span>
+            </div>
+        </header>
+
+        <!-- INTRO -->
+        <section class="tarjeta-intro">
+            <h2>🎯 ¿Qué es el SOE?</h2>
+            <p>
+                El <span class="destacado">Servicio de Orientación Educativa</span> es un proceso que te acompaña en tu formación integral. 
+                Trabajamos <span class="destacado">tres áreas</span> fundamentales para tu desarrollo:
+            </p>
+            <p>
+                <span class="area">📌 Permanencia y Continuidad</span>
+                <span class="area">🕊️ Cultura de Paz, Diversidad e Inclusión</span>
+                <span class="area">🎓 Desarrollo Vocacional y de Carrera</span>
+            </p>
+            <p>
+                Este semestre, hemos preparado <span class="destacado">5 misiones</span> que te ayudarán a reflexionar, crecer y construir tu proyecto de vida. 
+                <strong style="color:#f7c948;">¡Completa todas y desbloquearás tu elección de optativas!</strong>
+            </p>
+            <a href="soe-programa.html" class="btn-conocer-mas">📖 Conocer más sobre el programa</a>
+        </section>
+
+        <!-- REGLAS -->
+        <div class="reglas">
+            <div class="reglas-item"><span class="emoji">🎮</span> 5 misiones</div>
+            <div class="reglas-item"><span class="emoji">⏳</span> Fecha tope: 13 nov</div>
+            <div class="reglas-item"><span class="emoji">🏆</span> Diploma al finalizar</div>
+            <div class="reglas-item"><span class="emoji">🔓</span> Optativas desbloqueadas</div>
+        </div>
+
+        <!-- MISIONES -->
+        <div class="grid-actividades">
+
+            <div class="actividad mundo1">
+                <span class="icono">🕊️</span>
+                <h3>MUNDO 1<br>Cultura de Paz</h3>
+                <div class="descripcion">Reescribe historias de conflicto en un Reel de 30s. Sube guion + QR.</div>
+                <a class="btn-jugar" href="labs/lab-cultura-paz.html" target="_blank">▶ Jugar</a>
+            </div>
+
+            <div class="actividad mundo2">
+                <span class="icono">🛡️</span>
+                <h3>MUNDO 2<br>Violencia Intrafamiliar</h3>
+                <div class="descripcion">Analiza casos, identifica violencia y traza tu ruta de apoyo.</div>
+                <a class="btn-jugar" href="labs/lab-violencia.html" target="_blank">▶ Jugar</a>
+            </div>
+
+            <div class="actividad mundo3">
+                <span class="icono">❤️</span>
+                <h3>MUNDO 3<br>Conductas de Riesgo</h3>
+                <div class="descripcion">Reflexiona sobre sexualidad responsable y prevén embarazo no deseado.</div>
+                <a class="btn-jugar" href="labs/lab-conductas.html" target="_blank">▶ Jugar</a>
+            </div>
+
+            <div class="actividad mundo4">
+                <span class="icono">🚀</span>
+                <h3>MUNDO 4<br>Proyecto de Vida</h3>
+                <div class="descripcion">Crea tu tablero de visión a 10 años y define tus metas.</div>
+                <a class="btn-jugar" href="labs/lab-proyecto-vida.html" target="_blank">▶ Jugar</a>
+            </div>
+
+            <div class="actividad mundo5">
+                <span class="icono">🎓</span>
+                <h3>MUNDO 5<br>Opciones Educativas</h3>
+                <div class="descripcion">Realiza el test OLA y entrevista a un profesionista.</div>
+                <a class="btn-jugar" href="labs/lab-opciones.html" target="_blank">▶ Jugar</a>
+            </div>
+
+        </div>
+
+        <!-- OPTATIVAS -->
+        <section class="tarjeta-final">
+            <span class="icono-grande">🔓</span>
+            <h2>MISIÓN ESPECIAL · Elección de Optativas</h2>
+            <p>
+                <strong style="color:#f7c948;">¡Has llegado al final!</strong> 
+                Esta misión solo está disponible para quienes hayan completado las <strong>5 misiones anteriores</strong>.
+                Al elegir tus dos materias optativas, estarás construyendo tu perfil para el examen de admisión a nivel superior.
+            </p>
+            <p style="font-size:0.55rem; color:#88c9f0;">
+                ⚡ Si aún no has terminado todas las misiones, este botón permanecerá bloqueado.
+            </p>
+            <a class="btn-optativas" href="https://forms.office.com/tu-link-optativas" target="_blank">
+                🔥 Elegir Optativas
+            </a>
+            <div class="aviso">
+                * Solo alumnos con las 5 misiones completas pueden acceder.
+            </div>
+        </section>
+
+        <!-- PIE -->
+        <footer class="pie">
+            <p>📧 Contacto: <span class="destacado">alopezsa@uaemex.mx</span></p>
+        </footer>
+
+    </div>
+
+</body>
+</html>

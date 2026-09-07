@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mundo 3 · Conductas de Riesgo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 30px 35px;
+            max-width: 950px;
+            width: 100%;
+        }
+        .btn-paso {
+            background: #69db7c;
+            color: #0f172a;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 4px 0 #2d7a3a;
+        }
+        .btn-paso:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #2d7a3a; }
+        .btn-paso:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #2d7a3a; }
+        .btn-secundario {
+            background: transparent;
+            color: #94a3b8;
+            padding: 10px 20px;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-secundario:hover { background: rgba(255,255,255,0.05); border-color: #64748b; }
+        .btn-volver-lab {
+            display: inline-block;
+            background: #f7c948;
+            color: #0d0d1a;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        .btn-volver-lab:hover { background: #e0b030; transform: translateY(-2px); }
+        .paso { display: none; }
+        .paso.activo { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .progress-bar { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-bottom: 25px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #69db7c, #38bdf8); transition: width 0.5s; width: 14%; }
+        .articulo {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 450px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: #d0dbe8;
+        }
+        .articulo::-webkit-scrollbar { width: 6px; }
+        .articulo::-webkit-scrollbar-track { background: transparent; }
+        .articulo::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .articulo .destacado { color: #69db7c; }
+        .articulo .frase { color: #38bdf8; font-weight: 600; }
+        input, textarea {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+            transition: border 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #69db7c;
+        }
+        .tabla-likert {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .tabla-likert th, .tabla-likert td {
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 6px;
+            text-align: center;
+        }
+        .tabla-likert th {
+            background: rgba(105, 219, 124, 0.15);
+            color: #69db7c;
+            font-weight: 600;
+            font-size: 0.65rem;
+        }
+        .tabla-likert td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #e0e7ff;
+            padding-left: 12px;
+        }
+        .likert-opcion {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+        }
+        .likert-opcion:hover { border-color: #69db7c; background: rgba(105, 219, 124, 0.1); }
+        .likert-opcion.seleccionada { border-color: #69db7c; background: #69db7c; }
+        .likert-opcion.seleccionada::after { content: "✓"; color: #0f172a; font-weight: 800; display: flex; align-items: center; justify-content: center; height: 100%; }
+        .pregunta-abierta {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin: 8px 0;
+        }
+        .pregunta-abierta label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #e0e7ff;
+            display: block;
+            margin-bottom: 6px;
+        }
+        /* ===== DASHBOARD DE RESULTADOS ===== */
+        .dashboard-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 16px 20px;
+            transition: all 0.3s;
+        }
+        .dashboard-card:hover { background: rgba(255,255,255,0.06); }
+        .barra-likert {
+            height: 12px;
+            border-radius: 6px;
+            background: #1e293b;
+            overflow: hidden;
+            position: relative;
+        }
+        .barra-likert .relleno {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease;
+            background: linear-gradient(90deg, #69db7c, #38bdf8);
+        }
+        .etiqueta-nivel {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .nivel-bajo { background: #ef4444; color: white; }
+        .nivel-medio { background: #f59e0b; color: #0f172a; }
+        .nivel-alto { background: #10b981; color: white; }
+        .reflexion-tarjeta {
+            border-left: 4px solid #69db7c;
+            padding-left: 14px;
+            margin: 10px 0;
+        }
+        .reflexion-tarjeta .icono { font-size: 1.2rem; margin-right: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel">
+
+        <!-- Barra de progreso -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Título -->
+        <div class="flex items-center gap-3 mb-4">
+            <span class="text-4xl">❤️</span>
+            <div>
+                <p class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Mundo 3</p>
+                <h1 class="text-2xl font-black text-white">Conductas de Riesgo</h1>
+                <p class="text-sm text-slate-400">Sexualidad Responsable</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 0: INICIO ========= -->
+        <div id="paso0" class="paso activo">
+            <h2 class="text-xl font-bold text-emerald-300 mb-4">🎯 Bienvenido al Laboratorio</h2>
+            
+            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700 mb-6">
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    En esta actividad reflexionaremos sobre la <strong class="text-emerald-300">sexualidad responsable</strong>, 
+                    explorando conceptos como virginidad, castidad y la importancia de tomar decisiones informadas y autónomas.
+                </p>
+                <p class="text-sm text-slate-400 mt-3">
+                    📌 <strong>Instrucciones:</strong>
+                </p>
+                <ul class="text-sm text-slate-400 list-disc list-inside space-y-1 mt-1">
+                    <li>Lee el artículo "Reflexión sobre sexualidad, virginidad y castidad".</li>
+                    <li>Completa el cuadro de actitud ante la sexualidad responsable.</li>
+                    <li>Responde las 4 preguntas de reflexión.</li>
+                    <li>Descarga tu evidencia en PDF y súbela al formulario.</li>
+                </ul>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">✏️ Nombre completo:</label>
+                    <input type="text" id="nombreAlumno" placeholder="Ej: García Pérez Ana Sofía" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">📚 Grupo:</label>
+                    <input type="text" id="grupoAlumno" placeholder="Ej: 5to A" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+            </div>
+
+            <button class="btn-paso w-full" onclick="iniciarLaboratorio()">Comenzar actividad ➔</button>
+        </div>
+
+        <!-- ========= PASO 1: LECTURA ========= -->
+        <div id="paso1" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-emerald-300">📖 Reflexión sobre sexualidad, virginidad y castidad</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(0)">⬅ Regresar</button>
+            </div>
+            
+            <div class="bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-emerald-300">Instrucción:</strong> Lee atentamente el siguiente texto. 
+                    Reflexiona sobre cómo los <strong class="text-emerald-300">guiones sexuales</strong> influyen en las decisiones de los adolescentes y jóvenes.
+                </p>
+            </div>
+
+            <div class="articulo">
+                <p><span class="destacado">SEXUALIDAD RESPONSABLE – PREVENCIÓN DE EMBARAZO NO DESEADO</span></p>
+                <p class="text-xs text-slate-500 mt-1">Reflexión sobre sexualidad, virginidad y castidad</p>
+                <br>
+                <p>En todas las culturas los comportamientos sociales están contenidos en guiones públicos, tales como las leyes y los preceptos religiosos, en guiones de subgrupos y finalmente en guiones particulares. Los guiones sexuales son parte de los sociales; son un conjunto de normas; un patrón para conducir las acciones y conductas de los individuos. Sin embargo, con mucha frecuencia los guiones sexuales de las personas no son réplica exacta del patrón sexual ofrecido por la cultura.</p>
+                <br>
+                <p>En nuestro caso los guiones sexuales acerca de la relación sexual completa o coito, difieren según el sexo, el estado civil y la edad. Es aceptada y promovida en jóvenes y adultos casados; desaconsejada o negada en la vejez; <span class="frase">prohibida en las adolescentes y jóvenes solteras; promovida y aceptada veladamente en adolescentes y jóvenes solteros.</span></p>
+                <br>
+                <p>Mantener la «virginidad», entendida como la integridad del himen, es un guión fuertemente impuesto donde se asume que <span class="frase">"la integridad anatómica del himen es garantía de la pureza"</span>. La «castidad» es interpretada como la abstención total de relaciones sexuales.</p>
+                <br>
+                <p>Ante esta nueva situación, muchos adultos dibujan un cuadro donde representan a todos los jóvenes y adolescentes derribando las prohibiciones y entregados casi obsesivamente a la realización del coito. Sin embargo, <span class="destacado">muchas jóvenes todavía valoran la virginidad y también la valoran muchos jóvenes.</span></p>
+                <br>
+                <p>Hablar de las relaciones sexuales de los adolescentes es un tema que se suscita para acalorados debates entre los adultos sobre los pros y contras, sobre si es "bueno" o es "malo".</p>
+                <br>
+                <p><span class="frase">Sería más provechoso no discutir en abstracto sino sobre lo particular; sobre lo que para cada adolescente o pareja de adolescentes puede significar la relación sexual.</span></p>
+                <br>
+                <p><span class="destacado">Infierno o paraíso.</span> Experiencia positiva y enriquecedora o negativa y empobrecedora. Todo puede ser dependiendo de los personajes y del escenario.</p>
+                <br>
+                <p><span class="frase">La decisión de tener o no tener relaciones sexuales, con quién y cuándo tenerla, está íntimamente relacionada con las normas que los adolescentes hayan introyectado, de los valores que les hayan transmitido y del grado de libertad y autonomía que hayan podido adquirir.</span></p>
+                <br>
+                <p>Autonomía y libertad que significan <span class="destacado">poder decir sí y también poder decir no</span>. Que facilitan la resistencia a imposiciones externas y conllevan a la responsabilidad y la consideración de la libertad del otro.</p>
+                <br>
+                <p>Los muchachos también nos dicen que los motivos que los llevan a tener relaciones sexuales son: <span class="frase">"porque estoy enamorado"</span>, <span class="frase">"porque es lo único en mi vida"</span>, <span class="frase">"porque no quiero ser infiel con otra"</span>, <span class="frase">"porque no puedo contenerme más"</span>, <span class="frase">"porque él me lo pidió"</span>, <span class="frase">"porque me siento más hombre"</span>, <span class="frase">"porque me siento más mujer"</span>, <span class="frase">"para no quedar mal con el grupo"</span>, <span class="frase">"quería saber cómo era la cosa"</span>, <span class="frase">"para que se case conmigo"</span> y finalmente <span class="frase">"porque sí"</span>.</p>
+                <br>
+                <p>Los motivos por los cuales <span class="destacado">no</span> desean tener relaciones sexuales se verbalizan así: <span class="frase">"Me pueden abandonar después"</span>, <span class="frase">"Porque es una niña buena"</span>, <span class="frase">"Puede quedar embarazada"</span>, <span class="frase">"No lo quiero lo suficiente"</span>, <span class="frase">"Todavía no podemos casarnos"</span>, <span class="frase">"Es pecado"</span>, <span class="frase">"Pierdo mi reputación de señorita"</span>, <span class="frase">"Mis padres me matarían"</span> y finalmente <span class="frase">"porque no"</span>.</p>
+                <br>
+                <p>Estos y otros motivos reflejan los valores, los conceptos sobre el hombre y la mujer y la autoestima de los adolescentes. <span class="frase">Es notorio el concepto de indefensión que tiene la mujer de sí misma, su propensión a unir la relación sexual con el amor y su contemporización con las normas sociales.</span></p>
+                <br>
+                <p>Un <span class="destacado">"final feliz"</span> supone un comienzo feliz que tendría los siguientes elementos:</p>
+                <ul class="list-disc list-inside text-sm text-slate-300 space-y-1 mt-2">
+                    <li><span class="frase">La concordancia entre los propios valores con la decisión.</span></li>
+                    <li><span class="frase">La voluntad de no explotar ni ser explotado.</span></li>
+                    <li><span class="frase">El no querer probar algo a expensas del otro.</span></li>
+                    <li><span class="frase">Discreción.</span></li>
+                    <li><span class="frase">El compromiso de cuidar, respetar y ser responsable con el otro por todo el tiempo que dure la relación amorosa.</span></li>
+                </ul>
+                <br>
+                <p><span class="destacado">Sea cual sea la opción que tome el adolescente, no debe ser objeto de discriminación ni descalificación por parte de los que no comparten sus ideas.</span></p>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(0)">⬅ Regresar</button>
+                <button class="btn-paso" onclick="irPaso(2)">📝 Realizar actividad ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 2: ACTIVIDAD ========= -->
+        <div id="paso2" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-emerald-300">📝 Actitud ante la sexualidad responsable</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(1)">⬅ Regresar</button>
+            </div>
+
+            <div class="bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-emerald-300">Instrucción:</strong> Marca con una X la aceptación que tienes ante reconocer y vivir las siguientes conductas responsables en el ejercicio de la sexualidad. Luego responde las preguntas de reflexión.
+                </p>
+            </div>
+
+            <!-- CUADRO LIKERT -->
+            <div class="overflow-x-auto mb-6">
+                <table class="tabla-likert">
+                    <thead>
+                        <tr>
+                            <th style="min-width:140px;">Conducta</th>
+                            <th>Totalmente en desacuerdo</th>
+                            <th>Desacuerdo</th>
+                            <th>Medianamente de acuerdo</th>
+                            <th>De acuerdo</th>
+                            <th>Totalmente de acuerdo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Abstinencia</td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(0, 0, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(0, 1, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(0, 2, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(0, 3, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(0, 4, this)"></span></td>
+                        </tr>
+                        <tr>
+                            <td>Retraso de la edad de inicio de la actividad sexual</td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(1, 0, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(1, 1, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(1, 2, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(1, 3, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(1, 4, this)"></span></td>
+                        </tr>
+                        <tr>
+                            <td>Educación sexual</td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(2, 0, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(2, 1, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(2, 2, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(2, 3, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(2, 4, this)"></span></td>
+                        </tr>
+                        <tr>
+                            <td>Uso del condón masculino o femenino</td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(3, 0, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(3, 1, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(3, 2, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(3, 3, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(3, 4, this)"></span></td>
+                        </tr>
+                        <tr>
+                            <td>Reducción del número de parejas sexuales</td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(4, 0, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(4, 1, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(4, 2, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(4, 3, this)"></span></td>
+                            <td><span class="likert-opcion" onclick="seleccionarLikert(4, 4, this)"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PREGUNTAS ABIERTAS -->
+            <div class="space-y-4">
+                <div class="pregunta-abierta">
+                    <label>1. ¿Qué dificultades pueden enfrentar los adolescentes (hombres y mujeres) ante un embarazo no deseado?</label>
+                    <textarea id="pregunta1" rows="2" placeholder="Escribe tu respuesta..." class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                </div>
+                <div class="pregunta-abierta">
+                    <label>2. ¿Qué dificultades pueden enfrentar las familias de los adolescentes ante un embarazo no deseado?</label>
+                    <textarea id="pregunta2" rows="2" placeholder="Escribe tu respuesta..." class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                </div>
+                <div class="pregunta-abierta">
+                    <label>3. ¿Cuáles crees que pueden ser las mejores actitudes y decisiones que se deben tomar para prevenir o evitar un embarazo no deseado?</label>
+                    <textarea id="pregunta3" rows="2" placeholder="Escribe tu respuesta..." class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                </div>
+                <div class="pregunta-abierta">
+                    <label>4. ¿Por qué los puntos anteriores se consideran conductas sexuales responsables?</label>
+                    <textarea id="pregunta4" rows="2" placeholder="Escribe tu respuesta..." class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-sm text-slate-200"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(1)">⬅ Regresar</button>
+                <button class="btn-paso" id="btnValidar" onclick="validarActividad()">✅ Validar respuestas</button>
+                <button class="btn-paso" id="btnSiguiente" style="display:none;" onclick="irPasoConCarga(3)">📤 Enviar respuestas ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 3: TRANSICIÓN ========= -->
+        <div id="paso3" class="paso text-center">
+            <div class="py-12">
+                <div class="text-6xl mb-6 animate-bounce">⏳</div>
+                <h2 class="text-2xl font-bold text-emerald-300 mb-3">Enviando tu información...</h2>
+                <p class="text-slate-400 text-sm">Estamos procesando tus respuestas y generando tu evidencia.</p>
+                <div class="w-48 h-2 bg-slate-700 rounded-full mx-auto mt-6 overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full" id="barraCarga" style="width: 0%;"></div>
+                </div>
+                <p class="text-xs text-slate-500 mt-3" id="textoCarga">Preparando archivo...</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 4: DASHBOARD DE RESULTADOS ========= -->
+        <div id="paso4" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-emerald-300">📊 Dashboard de resultados</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(2)">⬅ Regresar</button>
+            </div>
+
+            <!-- Cabecera del dashboard -->
+            <div class="bg-emerald-900/20 border border-emerald-500/30 p-5 rounded-xl mb-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <p class="text-xs text-slate-400">Estudiante</p>
+                        <p class="text-lg font-bold text-white" id="dashNombre">--</p>
+                        <p class="text-sm text-slate-400" id="dashGrupo">--</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400">Fecha</p>
+                        <p class="text-sm text-slate-300" id="dashFecha">--</p>
+                    </div>
+                    <div>
+                        <span class="etiqueta-nivel" id="dashNivel">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de barras horizontal (Likert) -->
+            <div class="dashboard-card mb-6">
+                <h3 class="text-sm font-bold text-emerald-300 mb-4">📋 Cuadro de actitud</h3>
+                <div id="dashBarras" class="space-y-3">
+                    <!-- Inyectado por JS -->
+                </div>
+            </div>
+
+            <!-- Tarjetas de reflexión -->
+            <div class="dashboard-card">
+                <h3 class="text-sm font-bold text-emerald-300 mb-4">💬 Preguntas de reflexión</h3>
+                <div id="dashReflexiones" class="space-y-3">
+                    <!-- Inyectado por JS -->
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-4 mt-6 justify-between">
+                <button class="btn-secundario" onclick="irPaso(2)">⬅ Regresar</button>
+                <button class="btn-paso" onclick="generarPDF()">⬇️ Descargar mi evidencia en PDF</button>
+                <button class="btn-paso" id="btnEnviarFormulario" style="display:none;" onclick="irPaso(5)">📤 Enviar evidencia</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 5: ENVÍO AL FORMULARIO ========= -->
+        <div id="paso5" class="paso text-center">
+            <div class="py-8">
+                <span class="text-6xl block mb-4">📤</span>
+                <h2 class="text-2xl font-bold text-emerald-300 mb-3">¡Listo para entregar!</h2>
+                <p class="text-slate-400 text-sm mb-6">
+                    Ya tienes tu evidencia en PDF. Ahora solo debes subirla al formulario oficial.
+                </p>
+
+                <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-xl text-left mb-6">
+                    <p class="text-sm text-slate-300 font-bold mb-2">📌 Instrucciones importantes:</p>
+                    <ul class="text-sm text-slate-400 list-disc list-inside space-y-2">
+                        <li>Llena <strong class="text-emerald-300">todos</strong> los campos del formulario.</li>
+                        <li>Escribe tu <strong class="text-emerald-300">número de cuenta</strong> sin espacios al inicio ni al final.</li>
+                        <li>El número de cuenta es tu <strong class="text-emerald-300">identificador oficial</strong> para validar tu entrega.</li>
+                    </ul>
+                </div>
+
+                <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=nn_hqb6Q0EGE62pI6-n-wMN_dUxOwbVAu1QaWfm5rm1UOFRFRUhYMDlJWEJGVUlQWk1SSkE1NE05Qy4u" target="_blank" class="btn-paso inline-block text-center w-full" style="text-decoration:none;">
+                    📤 Subir mi evidencia al formulario
+                </a>
+
+                <div class="mt-6">
+                    <a href="../index.html" class="btn-volver-lab">🏠 Regresar a casa</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let pasoActual = 0;
+        const totalPasos = 6;
+        let likertRespuestas = [null, null, null, null, null];
+        let nombre = '';
+        let grupo = '';
+        const nivelesTexto = ['Totalmente en desacuerdo', 'Desacuerdo', 'Medianamente de acuerdo', 'De acuerdo', 'Totalmente de acuerdo'];
+        const conductas = ['Abstinencia', 'Retraso de inicio', 'Educación sexual', 'Uso del condón', 'Reducción de parejas'];
+        const emojis = ['⏸️', '⏳', '📚', '🛡️', '👥'];
+
+        function irPaso(numero) {
+            document.querySelectorAll('.paso').forEach(el => el.classList.remove('activo'));
+            document.getElementById('paso' + numero).classList.add('activo');
+            pasoActual = numero;
+            document.getElementById('progressFill').style.width = ((numero / totalPasos) * 100) + '%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function iniciarLaboratorio() {
+            nombre = document.getElementById('nombreAlumno').value.trim();
+            grupo = document.getElementById('grupoAlumno').value.trim();
+            if (nombre.length < 3 || grupo.length < 1) {
+                alert('Por favor, llena todos los campos (nombre y grupo).');
+                return;
+            }
+            irPaso(1);
+        }
+
+        function seleccionarLikert(fila, valor, el) {
+            const contenedor = el.closest('tr');
+            contenedor.querySelectorAll('.likert-opcion').forEach(btn => btn.classList.remove('seleccionada'));
+            el.classList.add('seleccionada');
+            likertRespuestas[fila] = valor;
+        }
+
+        function validarActividad() {
+            let completa = true;
+            const preguntas = ['pregunta1', 'pregunta2', 'pregunta3', 'pregunta4'];
+            
+            for (let i = 0; i < 5; i++) {
+                if (likertRespuestas[i] === null) { completa = false; break; }
+            }
+            for (let i = 0; i < preguntas.length; i++) {
+                if (document.getElementById(preguntas[i]).value.trim().length < 10) { completa = false; break; }
+            }
+
+            if (completa) {
+                document.getElementById('btnValidar').style.display = 'none';
+                document.getElementById('btnSiguiente').style.display = 'inline-block';
+                alert('✅ ¡Actividad completada! Puedes continuar.');
+            } else {
+                alert('❌ Asegúrate de:\n- Marcar todas las opciones del cuadro.\n- Responder las 4 preguntas con al menos 10 caracteres cada una.');
+            }
+        }
+
+        function irPasoConCarga(numero) {
+            irPaso(3);
+            let progreso = 0;
+            const barra = document.getElementById('barraCarga');
+            const texto = document.getElementById('textoCarga');
+            const interval = setInterval(() => {
+                progreso += Math.random() * 15;
+                if (progreso >= 100) {
+                    progreso = 100;
+                    clearInterval(interval);
+                    texto.textContent = '✅ ¡Información procesada!';
+                    setTimeout(() => {
+                        irPaso(4);
+                        mostrarDashboard();
+                    }, 800);
+                }
+                barra.style.width = progreso + '%';
+                if (progreso < 30) texto.textContent = 'Validando respuestas...';
+                else if (progreso < 60) texto.textContent = 'Generando evidencia...';
+                else if (progreso < 90) texto.textContent = 'Preparando archivo...';
+            }, 200);
+        }
+
+        function mostrarDashboard() {
+            document.getElementById('dashNombre').textContent = nombre;
+            document.getElementById('dashGrupo').textContent = 'Grupo: ' + grupo;
+            document.getElementById('dashFecha').textContent = new Date().toLocaleDateString();
+
+            const suma = likertRespuestas.reduce((a, b) => a + b, 0);
+            const promedio = suma / 5;
+            let nivel = '', nivelClase = '';
+            if (promedio >= 4) { nivel = 'Alta aceptación'; nivelClase = 'nivel-alto'; }
+            else if (promedio >= 2.5) { nivel = 'Aceptación media'; nivelClase = 'nivel-medio'; }
+            else { nivel = 'Baja aceptación'; nivelClase = 'nivel-bajo'; }
+            document.getElementById('dashNivel').textContent = nivel;
+            document.getElementById('dashNivel').className = 'etiqueta-nivel ' + nivelClase;
+
+            const contBarras = document.getElementById('dashBarras');
+            let htmlBarras = '';
+            for (let i = 0; i < 5; i++) {
+                const valor = likertRespuestas[i] !== null ? likertRespuestas[i] : 0;
+                const ancho = (valor / 4) * 100;
+                htmlBarras += `
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>${emojis[i]} ${conductas[i]}</span>
+                            <span>${nivelesTexto[valor]}</span>
+                        </div>
+                        <div class="barra-likert">
+                            <div class="relleno" style="width: ${ancho}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            contBarras.innerHTML = htmlBarras;
+
+            const contReflexiones = document.getElementById('dashReflexiones');
+            const preguntas = [
+                document.getElementById('pregunta1').value.trim() || 'No respondida',
+                document.getElementById('pregunta2').value.trim() || 'No respondida',
+                document.getElementById('pregunta3').value.trim() || 'No respondida',
+                document.getElementById('pregunta4').value.trim() || 'No respondida'
+            ];
+            const etiquetas = [
+                'Dificultades para adolescentes',
+                'Dificultades para las familias',
+                'Mejores actitudes para prevenir',
+                '¿Por qué son conductas responsables?'
+            ];
+            const iconos = ['😔', '🏠', '🛡️', '🤔'];
+            let htmlReflex = '';
+            for (let i = 0; i < 4; i++) {
+                htmlReflex += `
+                    <div class="reflexion-tarjeta">
+                        <p class="text-xs text-slate-400 flex items-center">
+                            <span class="icono">${iconos[i]}</span> ${etiquetas[i]}
+                        </p>
+                        <p class="text-sm text-slate-300">${preguntas[i]}</p>
+                    </div>
+                `;
+            }
+            contReflexiones.innerHTML = htmlReflex;
+
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // === CONFIGURACIÓN DE COLORES ===
+            const verde = '#69db7c';
+            const verdeOscuro = '#2d7a3a';
+            const fondo = '#0f172a';
+            const textoClaro = '#f8fafc';
+            const textoGris = '#94a3b8';
+            const bordeTarjeta = '#1e293b';
+            
+            // === FONDO OSCURO ===
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 297, 'F');
+            
+            // === LÍNEA DECORATIVA SUPERIOR ===
+            doc.setDrawColor(105, 219, 124);
+            doc.setLineWidth(2);
+            doc.line(20, 25, 190, 25);
+            
+            // === TÍTULO PRINCIPAL ===
+            doc.setFontSize(22);
+            doc.setTextColor(105, 219, 124);
+            doc.text('❤️ Conductas de Riesgo', 20, 48);
+            
+            // === TARJETA DE DATOS DEL ESTUDIANTE ===
+            doc.setDrawColor(30, 41, 59);
+            doc.setFillColor(30, 41, 59);
+            doc.roundedRect(20, 60, 170, 30, 4, 4, 'FD');
+            
+            doc.setFontSize(11);
+            doc.setTextColor(200, 200, 200);
+            doc.text(`Nombre: ${nombre}`, 28, 72);
+            doc.text(`Grupo: ${grupo}`, 28, 82);
+            
+            doc.setTextColor(105, 219, 124);
+            doc.text(new Date().toLocaleDateString(), 160, 72, { align: 'right' });
+            
+            // === TÍTULO SECCIÓN: CUADRO LIKERT ===
+            doc.setFontSize(16);
+            doc.setTextColor(105, 219, 124);
+            doc.text('📋 Cuadro de actitud', 20, 105);
+            
+            doc.setDrawColor(51, 65, 85);
+            doc.line(20, 110, 190, 110);
+            
+            // === TABLA LIKERT ===
+            const niveles = ['Totalmente en desacuerdo', 'Desacuerdo', 'Medianamente de acuerdo', 'De acuerdo', 'Totalmente de acuerdo'];
+            const conductas = ['Abstinencia', 'Retraso de inicio', 'Educación sexual', 'Uso del condón', 'Reducción de parejas'];
+            const emojis = ['⏸️', '⏳', '📚', '🛡️', '👥'];
+            
+            let yPos = 120;
+            for (let i = 0; i < 5; i++) {
+                const valor = likertRespuestas[i] !== null ? niveles[likertRespuestas[i]] : 'No seleccionado';
+                
+                if (i % 2 === 0) {
+                    doc.setFillColor(30, 41, 59);
+                    doc.rect(20, yPos - 4, 170, 8, 'F');
+                }
+                
+                doc.setFontSize(10);
+                doc.setTextColor(200, 200, 200);
+                doc.text(`${emojis[i]} ${conductas[i]}`, 22, yPos);
+                
+                doc.setTextColor(105, 219, 124);
+                doc.text(valor, 140, yPos, { align: 'right' });
+                
+                if (likertRespuestas[i] !== null) {
+                    const ancho = ((likertRespuestas[i] + 1) / 5) * 50;
+                    doc.setDrawColor(105, 219, 124);
+                    doc.setFillColor(105, 219, 124);
+                    doc.roundedRect(150, yPos - 5, ancho, 5, 2, 2, 'FD');
+                }
+                
+                yPos += 10;
+            }
+            
+            // === SEPARADOR ===
+            yPos += 6;
+            doc.setDrawColor(51, 65, 85);
+            doc.line(20, yPos, 190, yPos);
+            yPos += 8;
+            
+            // === TÍTULO SECCIÓN: REFLEXIONES ===
+            doc.setFontSize(16);
+            doc.setTextColor(105, 219, 124);
+            doc.text('💬 Preguntas de reflexión', 20, yPos);
+            yPos += 6;
+            doc.setDrawColor(51, 65, 85);
+            doc.line(20, yPos, 190, yPos);
+            yPos += 8;
+            
+            // === REFLEXIONES ===
+            const preguntas = [
+                document.getElementById('pregunta1').value.trim() || 'No respondida',
+                document.getElementById('pregunta2').value.trim() || 'No respondida',
+                document.getElementById('pregunta3').value.trim() || 'No respondida',
+                document.getElementById('pregunta4').value.trim() || 'No respondida'
+            ];
+            const etiquetas = [
+                '😔 Dificultades para adolescentes',
+                '🏠 Dificultades para las familias',
+                '🛡️ Mejores actitudes para prevenir',
+                '🤔 ¿Por qué son conductas responsables?'
+            ];
+            
+            for (let i = 0; i < 4; i++) {
+                doc.setDrawColor(105, 219, 124);
+                doc.setLineWidth(1.5);
+                doc.line(20, yPos - 2, 20, yPos + 8);
+                
+                doc.setFontSize(9);
+                doc.setTextColor(148, 163, 184);
+                doc.text(etiquetas[i], 26, yPos);
+                
+                doc.setFontSize(10);
+                doc.setTextColor(200, 200, 200);
+                const lines = doc.splitTextToSize(preguntas[i], 155);
+                doc.text(lines, 26, yPos + 6);
+                
+                yPos += (lines.length * 6) + 14;
+                if (i < 3) yPos += 4;
+            }
+            
+            // === PIE DE PÁGINA ===
+            doc.setDrawColor(51, 65, 85);
+            doc.line(20, 280, 190, 280);
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Documento generado automáticamente - SOE UAEMex', 105, 290, { align: 'center' });
+            
+            doc.save('Evidencia_ConductasRiesgo_' + nombre.replace(/\s/g, '_') + '.pdf');
+            
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        // Inicializar
+        irPaso(0);
+    </script>
+
+</body>
+</html>

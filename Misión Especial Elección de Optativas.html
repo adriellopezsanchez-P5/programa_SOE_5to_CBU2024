@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Misión Especial · Elección de Optativas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 30px 35px;
+            max-width: 1000px;
+            width: 100%;
+        }
+        .btn-paso {
+            background: #f7c948;
+            color: #0f172a;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 4px 0 #b8962a;
+        }
+        .btn-paso:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #b8962a; }
+        .btn-paso:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #b8962a; }
+        .btn-secundario {
+            background: transparent;
+            color: #94a3b8;
+            padding: 10px 20px;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-secundario:hover { background: rgba(255,255,255,0.05); border-color: #64748b; }
+        .btn-volver-lab {
+            display: inline-block;
+            background: #f7c948;
+            color: #0d0d1a;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        .btn-volver-lab:hover { background: #e0b030; transform: translateY(-2px); }
+        .paso { display: none; }
+        .paso.activo { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .progress-bar { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-bottom: 25px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #f7c948, #f59e0b); transition: width 0.5s; width: 14%; }
+
+        input {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+            transition: border 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #f7c948;
+        }
+
+        /* ================================================================
+           CATÁLOGO DE OPTATIVAS - ESTILO TARJETAS
+           ================================================================ */
+        .optativa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+        .optativa-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 18px 20px;
+            transition: all 0.3s;
+            border-left: 4px solid #f7c948;
+        }
+        .optativa-card:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        .optativa-card .numero {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #f7c948;
+            background: rgba(247, 201, 72, 0.15);
+            padding: 2px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+        .optativa-card .nombre {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #f7c948;
+            margin-bottom: 4px;
+        }
+        .optativa-card .descripcion {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        /* Pantalla final */
+        .final-screen {
+            background: linear-gradient(135deg, #0d3c1a 0%, #1a5e30 100%);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(13, 60, 26, 0.2);
+            position: relative;
+            overflow: hidden;
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .final-screen::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(247, 201, 72, 0.1) 0%, transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .final-icon { font-size: 4rem; margin-bottom: 20px; z-index: 2; }
+        .final-title { font-size: 2.2rem; font-weight: 800; z-index: 2; }
+        .final-text { font-size: 1.1rem; color: #e2e8f0; max-width: 700px; margin: 15px auto; z-index: 2; line-height: 1.7; }
+        .final-text strong { color: #f7c948; }
+        .success-stamp {
+            color: #f7c948;
+            font-size: 1.3rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 25px;
+            padding: 15px 35px;
+            border: 3px dashed #f7c948;
+            border-radius: 16px;
+            display: inline-block;
+            background: rgba(247, 201, 72, 0.08);
+            z-index: 2;
+        }
+        @media (max-width: 600px) {
+            .optativa-grid { grid-template-columns: 1fr; }
+            .final-title { font-size: 1.6rem; }
+            .final-screen { padding: 40px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel">
+
+        <!-- Barra de progreso -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Título -->
+        <div class="flex items-center gap-3 mb-4">
+            <span class="text-4xl">🔓</span>
+            <div>
+                <p class="text-xs font-bold text-amber-400 uppercase tracking-widest">Misión Especial</p>
+                <h1 class="text-2xl font-black text-white">Elección de Optativas</h1>
+                <p class="text-sm text-slate-400">Construye tu perfil para 6to semestre</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 0: INICIO ========= -->
+        <div id="paso0" class="paso activo">
+            <h2 class="text-xl font-bold text-amber-300 mb-4">🎯 Bienvenido a la Misión Especial</h2>
+            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700 mb-6">
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    Has llegado a la <strong class="text-amber-300">última misión</strong> del SOE. 
+                    Ahora elegirás las <strong class="text-amber-300">dos materias optativas</strong> que cursarás en sexto semestre, 
+                    las cuales complementarán tu perfil académico y te prepararán para el examen de admisión a nivel superior.
+                </p>
+                <p class="text-sm text-slate-400 mt-3">📌 <strong>Instrucciones:</strong></p>
+                <ul class="text-sm text-slate-400 list-disc list-inside space-y-1 mt-1">
+                    <li>Revisa el <strong class="text-amber-300">catálogo de optativas</strong> (11 materias disponibles).</li>
+                    <li>Selecciona <strong class="text-amber-300">dos</strong> que se alineen con tus intereses vocacionales.</li>
+                    <li>Completa el <strong class="text-amber-300">formulario de elección</strong> con tus datos y selección.</li>
+                    <li>¡Listo! Has completado tu proceso de orientación educativa.</li>
+                </ul>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">✏️ Nombre completo:</label>
+                    <input type="text" id="nombreAlumno" placeholder="Ej: García Pérez Ana Sofía" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">📚 Grupo:</label>
+                    <input type="text" id="grupoAlumno" placeholder="Ej: 5to A" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+            </div>
+            <button class="btn-paso w-full" onclick="iniciarMision()">Comenzar misión ➔</button>
+        </div>
+
+        <!-- ========= PASO 1: INTRODUCCIÓN ========= -->
+        <div id="paso1" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-amber-300">📖 ¿Por qué elegir bien tus optativas?</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(0)">⬅ Regresar</button>
+            </div>
+            <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-xl mb-4">
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    <strong class="text-amber-300">🎯 Propósito:</strong> Las asignaturas optativas de sexto semestre son tu <strong class="text-amber-300">segundo</strong> acercamiento real a las exigencias académicas de la universidad. 
+                    Elegir correctamente te permite desarrollar habilidades específicas y comprobar tu vocación antes de dar el gran paso hacia la licenciatura.
+                </p>
+            </div>
+            <div class="space-y-4 text-slate-300 text-sm leading-relaxed">
+                <p>
+                    <strong class="text-amber-300">¿Cómo elegir?</strong>
+                </p>
+                <ul class="list-disc list-inside space-y-2 text-slate-400">
+                    <li>Revisa el catálogo completo de las <strong class="text-amber-300">11 optativas</strong> disponibles.</li>
+                    <li>Reflexiona sobre <strong class="text-amber-300">tus intereses vocacionales</strong> y la carrera que te gustaría estudiar.</li>
+                    <li>Elige <strong class="text-amber-300">dos materias</strong> que te acerquen a tu meta profesional.</li>
+                    <li>Completa el <strong class="text-amber-300">formulario oficial</strong> con tu selección.</li>
+                </ul>
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 text-amber-300 text-sm">
+                    💡 <strong>Consejo:</strong> Elige materias que complementen tu perfil y te den una ventaja en el examen de admisión.
+                </div>
+            </div>
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(0)">⬅ Regresar</button>
+                <button class="btn-paso" onclick="irPaso(2)">📚 Ver catálogo de optativas ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 2: CATÁLOGO DE OPTATIVAS ========= -->
+        <div id="paso2" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-amber-300">📚 Catálogo de Optativas (6to Semestre)</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(1)">⬅ Regresar</button>
+            </div>
+            <div class="bg-amber-900/20 border border-amber-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-amber-300">Instrucción:</strong> Revisa cada materia. Al final, selecciona <strong>dos</strong> y ve al formulario de elección.
+                </p>
+            </div>
+
+            <div class="optativa-grid" id="catalogoOptativas">
+                <!-- Inyectado por JS -->
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(1)">⬅ Regresar</button>
+                <button class="btn-paso" onclick="irPaso(3)">📝 Ir al formulario de elección ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 3: FORMULARIO ========= -->
+        <div id="paso3" class="paso text-center">
+            <div class="py-8">
+                <span class="text-6xl block mb-4">📝</span>
+                <h2 class="text-2xl font-bold text-amber-300 mb-3">¡Es momento de elegir!</h2>
+                <p class="text-slate-400 text-sm mb-6">
+                    Completa el formulario oficial con tus datos y selecciona <strong class="text-amber-300">dos materias optativas</strong>.
+                </p>
+
+                <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-xl text-left mb-6">
+                    <p class="text-sm text-slate-300 font-bold mb-2">📌 Instrucciones importantes:</p>
+                    <ul class="text-sm text-slate-400 list-disc list-inside space-y-2">
+                        <li>Llena <strong class="text-amber-300">todos</strong> los campos del formulario.</li>
+                        <li>Escribe tu <strong class="text-amber-300">número de cuenta</strong> sin espacios al inicio ni al final.</li>
+                        <li>Selecciona <strong class="text-amber-300">exactamente dos</strong> materias optativas.</li>
+                        <li>Revisa tu selección antes de enviar.</li>
+                    </ul>
+                </div>
+
+                <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=nn_hqb6Q0EGE62pI6-n-wMN_dUxOwbVAu1QaWfm5rm1UMkw4WVdRMEMxTUdOUVM4ODNaTUMxVERWNS4u" target="_blank" class="btn-paso inline-block text-center w-full" style="text-decoration:none;">
+                    📤 Ir al formulario de elección
+                </a>
+
+                <div class="mt-6">
+                    <button class="btn-secundario" onclick="irPaso(4)">✅ Ya elegí, ver confirmación ➔</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========= PASO 4: PANTALLA FINAL ========= -->
+        <div id="paso4" class="paso">
+            <div class="final-screen">
+                <div class="final-icon">🎓</div>
+                <h1 class="final-title">¡Misión completada con éxito!</h1>
+                <p class="final-text">
+                    Has recorrido todo el proceso de orientación educativa. Ahora has elegido tus <strong>dos materias optativas</strong> que cursarás en sexto semestre, dando un paso firme hacia tu futuro profesional.
+                </p>
+                <p class="final-text" style="font-size: 0.95rem; color: #d1d5db;">
+                    Recuerda que esta elección es parte de tu construcción de perfil para el examen de admisión a nivel superior.
+                </p>
+                <div class="success-stamp">¡Elige sabiamente y mucho éxito!</div>
+
+                <div style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; z-index: 2;">
+                    <a href="../index.html" class="btn-volver-lab">🏠 Regresar al Portal</a>
+                    <button onclick="irPaso(0)" class="btn-secundario" style="border-color: #f7c948; color: #f7c948;">🔄 Reiniciar</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. DATOS DE LAS OPTATIVAS
+        // ============================================================
+        const optativas = [
+            { id: 1, nombre: 'Biología comparada', descripcion: 'Estudio de las similitudes y diferencias entre los sistemas biológicos de distintos organismos. Ideal para carreras de ciencias de la salud y biología.' },
+            { id: 2, nombre: 'Certificación internacional de inglés', descripcion: 'Preparación intensiva para obtener certificaciones internacionales (TOEFL, IELTS, Cambridge). Clave para carreras internacionales.' },
+            { id: 3, nombre: 'Comunicación y discurso', descripcion: 'Desarrollo de habilidades de oratoria, argumentación y comunicación efectiva en distintos contextos. Esencial para ciencias sociales y humanidades.' },
+            { id: 4, nombre: 'Liderazgo', descripcion: 'Herramientas y estrategias para liderar equipos, tomar decisiones y gestionar proyectos. Útil para administración, negocios y emprendimiento.' },
+            { id: 5, nombre: 'Contabilidad y finanzas', descripcion: 'Fundamentos de contabilidad, finanzas personales y empresariales. Base para carreras económico-administrativas.' },
+            { id: 6, nombre: 'Computación aplicada a la programación', descripcion: 'Introducción a la lógica de programación y algoritmos. Pensamiento computacional aplicado a problemas reales.' },
+            { id: 7, nombre: 'Informática y aplicaciones Web', descripcion: 'Desarrollo de habilidades en diseño y gestión de sitios web, aplicaciones y entornos digitales.' },
+            { id: 8, nombre: 'Diseño', descripcion: 'Principios de diseño gráfico, visual y de interacción. Aplicable a carreras de diseño, comunicación y arte digital.' },
+            { id: 9, nombre: 'Tópicos de química II', descripcion: 'Continuación de química con enfoque en reacciones orgánicas y bioquímica. Para carreras químicas y de salud.' },
+            { id: 10, nombre: 'Física ondulatoria y estática', descripcion: 'Estudio de ondas, sonido, luz y estática de cuerpos. Fundamental para ingenierías y ciencias exactas.' },
+            { id: 11, nombre: 'Principios de álgebra lineal', descripcion: 'Vectores, matrices y espacios vectoriales. Base para matemáticas, computación e ingenierías.' }
+        ];
+
+        // ============================================================
+        // 2. ESTADO GLOBAL
+        // ============================================================
+        let pasoActual = 0;
+        const totalPasos = 5;
+
+        // ============================================================
+        // 3. NAVEGACIÓN
+        // ============================================================
+        function irPaso(numero) {
+            document.querySelectorAll('.paso').forEach(el => el.classList.remove('activo'));
+            document.getElementById('paso' + numero).classList.add('activo');
+            pasoActual = numero;
+            document.getElementById('progressFill').style.width = ((numero / totalPasos) * 100) + '%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function iniciarMision() {
+            const nombre = document.getElementById('nombreAlumno').value.trim();
+            const grupo = document.getElementById('grupoAlumno').value.trim();
+            if (nombre.length < 3 || grupo.length < 1) {
+                alert('Por favor, llena todos los campos (nombre y grupo).');
+                return;
+            }
+            irPaso(1);
+        }
+
+        // ============================================================
+        // 4. RENDERIZAR CATÁLOGO
+        // ============================================================
+        function renderizarCatalogo() {
+            const container = document.getElementById('catalogoOptativas');
+            let html = '';
+            optativas.forEach(opt => {
+                html += `
+                    <div class="optativa-card">
+                        <div class="numero">#${String(opt.id).padStart(2, '0')}</div>
+                        <div class="nombre">${opt.nombre}</div>
+                        <div class="descripcion">${opt.descripcion}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // ============================================================
+        // 5. INICIALIZAR
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            renderizarCatalogo();
+        });
+        irPaso(0);
+    </script>
+
+</body>
+</html>

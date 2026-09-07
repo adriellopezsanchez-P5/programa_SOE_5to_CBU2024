@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mundo 1 · Cultura de Paz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 30px 35px;
+            max-width: 900px;
+            width: 100%;
+        }
+        .btn-paso {
+            background: #ff6b6b;
+            color: #fff;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 4px 0 #c0392b;
+        }
+        .btn-paso:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #c0392b; }
+        .btn-paso:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #c0392b; }
+        .btn-secundario {
+            background: transparent;
+            color: #94a3b8;
+            padding: 10px 20px;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-secundario:hover { background: rgba(255,255,255,0.05); border-color: #64748b; }
+        .btn-volver-lab {
+            display: inline-block;
+            background: #f7c948;
+            color: #0d0d1a;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        .btn-volver-lab:hover { background: #e0b030; transform: translateY(-2px); }
+        .paso { display: none; }
+        .paso.activo { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .progress-bar { height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-bottom: 25px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #ff6b6b, #ffa94d); transition: width 0.5s; width: 12.5%; }
+        .opcion-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 12px 16px;
+            margin: 6px 0;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #e0e7ff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+        }
+        .opcion-btn:hover { background: rgba(255,255,255,0.1); border-color: #ff6b6b; }
+        .opcion-btn.seleccionada { background: rgba(255, 107, 107, 0.2); border-color: #ff6b6b; }
+        .opcion-btn.correcta { background: rgba(16, 185, 129, 0.2); border-color: #10b981; }
+        .opcion-btn.incorrecta { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+        .articulo {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: #d0dbe8;
+        }
+        .articulo::-webkit-scrollbar { width: 6px; }
+        .articulo::-webkit-scrollbar-track { background: transparent; }
+        .articulo::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .articulo .destacado { color: #f7c948; }
+        .articulo .frase { color: #ff6b6b; font-weight: 600; }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        input, textarea {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+            transition: border 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+        .card-respuesta {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin: 6px 0;
+        }
+        .diagrama-cajas {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 10px 0;
+        }
+        .diagrama-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .diagrama-item .numero {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #ff6b6b;
+            min-width: 30px;
+        }
+        .diagrama-item .caja {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            color: #e0e7ff;
+        }
+        .diagrama-item .caja.correcta { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
+        .diagrama-item .caja.incorrecta { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+        .contador-caracteres {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.3);
+        }
+        .contador-caracteres.ok { color: #10b981; }
+        .contador-caracteres.falta { color: #ef4444; }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel">
+
+        <!-- Barra de progreso -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Título -->
+        <div class="flex items-center gap-3 mb-4">
+            <span class="text-4xl">🕊️</span>
+            <div>
+                <p class="text-xs font-bold text-rose-400 uppercase tracking-widest">Mundo 1</p>
+                <h1 class="text-2xl font-black text-white">Cultura de Paz</h1>
+                <p class="text-sm text-slate-400">Empatía y Transformación</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 0: INICIO ========= -->
+        <div id="paso0" class="paso activo">
+            <h2 class="text-xl font-bold text-rose-300 mb-4">🎯 Bienvenido al Laboratorio</h2>
+            
+            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700 mb-6">
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    En esta actividad exploraremos el <strong class="text-rose-300">bullying</strong> como uno de los principales problemas que afectan a las comunidades estudiantiles. 
+                    Reflexionaremos sobre cómo se construye este fenómeno y cómo podemos transformarlo desde la <strong class="text-rose-300">empatía</strong> y la <strong class="text-rose-300">Cultura de Paz</strong>.
+                </p>
+                <p class="text-sm text-slate-400 mt-3">
+                    📌 <strong>Instrucciones:</strong>
+                </p>
+                <ul class="text-sm text-slate-400 list-disc list-inside space-y-1 mt-1">
+                    <li>Lee el artículo con atención.</li>
+                    <li>Observa el video testimonial.</li>
+                    <li>Responde el cuestionario y escribe tu reflexión en 3 momentos.</li>
+                    <li>Descarga tu evidencia en PDF y súbela al formulario.</li>
+                </ul>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">✏️ Nombre completo:</label>
+                    <input type="text" id="nombreAlumno" placeholder="Ej: García Pérez Ana Sofía" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+                <div>
+                    <label class="text-sm font-bold text-slate-300 block mb-2">📚 Grupo:</label>
+                    <input type="text" id="grupoAlumno" placeholder="Ej: 5to A" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-3 text-white" />
+                </div>
+            </div>
+
+            <button class="btn-paso w-full" onclick="iniciarLaboratorio()">Comenzar actividad ➔</button>
+        </div>
+
+        <!-- ========= PASO 1: LECTURA ========= -->
+        <div id="paso1" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-rose-300">📖 El bullying no siempre empieza con quien empuja</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(0)">⬅ Regresar</button>
+            </div>
+            
+            <div class="bg-rose-900/20 border border-rose-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-rose-300">Instrucción:</strong> Lee atentamente el siguiente artículo escrito por madres de familia. 
+                    Reflexiona sobre la pregunta que plantean: <em class="text-rose-300">"¿Qué pasaría si quien hace el daño fuera mi hijo o hija?"</em>
+                </p>
+            </div>
+
+            <div class="articulo">
+                <p><span class="destacado">El bullying no siempre empieza con quien empuja.</span></p>
+                <p class="text-xs text-slate-500 mt-1">1 de junio de 2026</p>
+                <br>
+                <p>Cuando hablamos de acoso escolar, casi siempre pensamos en una sola figura: la personita que lo sufre, porque es la más vulnerable y el acoso puede ser demoledor como todas sabemos.</p>
+                <br>
+                <p>Pero hay algo incómodo que también necesitamos mirar y que, como madres, también nos preocupa (y mucho): <span class="frase">Nuestros hijos e hijas no solo pueden ser víctimas. También pueden ser quienes hacen daño. O quienes se ríen. O quienes miran hacia otro lado.</span></p>
+                <br>
+                <p>Y eso cuesta más aceptarlo.</p>
+                <br>
+                <p>Porque nadie quiere pensar que su criatura ejerce dolor en otras personas. Preferimos imaginarla como alguien que necesita protección, no como la persona que quizá necesita corrección.</p>
+                <br>
+                <p>Pero educar también es mirar ahí. Porque el bullying no siempre empieza con una persona agresora. A veces empieza con una risa que nadie frena. Con un apodo repetido. Con un grupo que decide excluir. Con un silencio cómplice.</p>
+                <br>
+                <p>Y muchas veces, <span class="frase">lo más peligroso no es quien empuja. Es quien normaliza.</span></p>
+                <br>
+                <p>Quien ve. Quien sabe. Quien no dice nada.</p>
+                <br>
+                <p>Por eso educar no es solo enseñar a defenderse. Es enseñar empatía. Límites. Responsabilidad colectiva.</p>
+                <br>
+                <p><span class="frase">Es enseñar que quien se ríe también participa. Que callarse también pesa. Que mirar hacia otro lado también deja marca.</span></p>
+                <br>
+                <p>No se trata de dividir entre "buenos" y "malos". Se trata de enseñarles que sus acciones, incluso las más pequeñas, construyen el tipo de persona que serán y que siempre se puede elegir distinto.</p>
+                <br>
+                <p>A veces las conversaciones más importantes no empiezan con: <span class="destacado">"¿Te están haciendo daño?"</span></p>
+                <br>
+                <p>Sino con: <span class="frase">"¿Tú cómo tratas a los demás? ¿Qué haces cuando ves que alguien se queda solo? ¿Te has reído alguna vez de algo que no estaba bien?"</span></p>
+                <br>
+                <p>Son preguntas incómodas, pero necesarias. Prevenir el bullying no siempre empieza en el colegio. Empieza mucho antes. En casa.</p>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(0)">⬅ Regresar</button>
+                <button class="btn-paso" onclick="irPaso(2)">🎥 Ver video testimonial ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 2: VIDEO ========= -->
+        <div id="paso2" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-rose-300">🎥 Testimonio: Iñaki Zubizarreta</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(1)">⬅ Regresar</button>
+            </div>
+            
+            <div class="bg-rose-900/20 border border-rose-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-rose-300">Instrucción:</strong> Observa el siguiente video con atención. 
+                    Iñaki Zubizarreta, exbaloncestista, comparte su historia de superación ante el acoso escolar.
+                </p>
+            </div>
+
+            <div class="video-container mb-4">
+                <iframe src="https://www.youtube.com/embed/6128OjtkOi8" title="Testimonio Iñaki Zubizarreta" frameborder="0" allowfullscreen></iframe>
+            </div>
+
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                <p class="text-xs text-slate-400">📌 Mientras ves el video, reflexiona:</p>
+                <ul class="text-sm text-slate-300 list-disc list-inside space-y-1 mt-2">
+                    <li>¿Qué emociones te genera el testimonio?</li>
+                    <li>¿Qué papel jugaron los "espectadores" en su historia?</li>
+                    <li>¿Qué cambio le permitió a Iñaki superar el acoso?</li>
+                </ul>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(1)">⬅ Regresar</button>
+                <button class="btn-paso" onclick="irPaso(3)">🧠 Responder cuestionario ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 3: CUESTIONARIO ========= -->
+        <div id="paso3" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-rose-300">🧠 Cuestionario de reflexión</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(2)">⬅ Regresar</button>
+            </div>
+            <p class="text-sm text-slate-400 mb-4">Responde con base en el artículo y el video.</p>
+
+            <!-- Pregunta 1 -->
+            <div class="mb-5">
+                <p class="text-sm text-slate-200 font-medium mb-2">1. Según el artículo, ¿quién normaliza el bullying?</p>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(0, this, 'a')">A) Solo la persona que agrede físicamente</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(0, this, 'b')">B) Quien se ríe, quien calla y quien mira hacia otro lado</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(0, this, 'c')">C) Solo los profesores que no intervienen</div>
+                <div id="feedback-0" class="text-xs font-bold mt-1"></div>
+            </div>
+
+            <!-- Pregunta 2 -->
+            <div class="mb-5">
+                <p class="text-sm text-slate-200 font-medium mb-2">2. ¿Qué mensaje principal transmite Iñaki Zubizarreta en su testimonio?</p>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(1, this, 'a')">A) El acoso solo ocurre en la escuela</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(1, this, 'b')">B) La resiliencia y el apoyo pueden transformar el dolor en fortaleza</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(1, this, 'c')">C) Los deportistas no sufren acoso</div>
+                <div id="feedback-1" class="text-xs font-bold mt-1"></div>
+            </div>
+
+            <!-- Pregunta 3 -->
+            <div class="mb-5">
+                <p class="text-sm text-slate-200 font-medium mb-2">3. ¿Qué frase del artículo invita a la autorreflexión sobre el propio comportamiento?</p>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(2, this, 'a')">A) "El bullying siempre empieza con quien empuja"</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(2, this, 'b')">B) "¿Tú cómo tratas a los demás? ¿Qué haces cuando ves que alguien se queda solo?"</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(2, this, 'c')">C) "Los niños siempre son víctimas"</div>
+                <div id="feedback-2" class="text-xs font-bold mt-1"></div>
+            </div>
+
+            <!-- Pregunta 4 -->
+            <div class="mb-5">
+                <p class="text-sm text-slate-200 font-medium mb-2">4. ¿Qué rol cumplen los "espectadores" en una situación de acoso?</p>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(3, this, 'a')">A) Son neutrales y no afectan la situación</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(3, this, 'b')">B) Pueden detener el acoso interviniendo o empeorarlo con su silencio</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(3, this, 'c')">C) Solo son importantes si graban lo que pasa</div>
+                <div id="feedback-3" class="text-xs font-bold mt-1"></div>
+            </div>
+
+            <!-- Pregunta 5 -->
+            <div class="mb-5">
+                <p class="text-sm text-slate-200 font-medium mb-2">5. ¿Qué enseñanza principal deja el artículo sobre la prevención del bullying?</p>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(4, this, 'a')">A) Solo los maestros deben intervenir</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(4, this, 'b')">B) La prevención empieza en casa, con la educación en empatía y responsabilidad</div>
+                <div class="opcion-btn" onclick="seleccionarRespuesta(4, this, 'c')">C) El bullying es inevitable y no se puede prevenir</div>
+                <div id="feedback-4" class="text-xs font-bold mt-1"></div>
+            </div>
+
+            <!-- Pregunta 6: Reflexión -->
+            <div class="mt-6">
+                <p class="text-sm text-slate-200 font-medium mb-2">6. Reflexión en 3 momentos: <span class="text-rose-300">¿Qué acción concreta puedes tomar para no ser un "espectador pasivo" ante una situación de acoso?</span></p>
+                <div class="bg-slate-800/30 p-4 rounded-xl border border-slate-700 mb-3">
+                    <p class="text-xs text-slate-400 mb-2">Estructura tu respuesta en 3 momentos:</p>
+                    <ul class="text-xs text-slate-400 list-disc list-inside space-y-1">
+                        <li><strong class="text-rose-300">Momento 1 (Tensión):</strong> Describe el problema o conflicto.</li>
+                        <li><strong class="text-amber-300">Momento 2 (Giro Asertivo):</strong> ¿Cómo aplicarías la empatía o mediación?</li>
+                        <li><strong class="text-emerald-300">Momento 3 (Cultura de Paz):</strong> ¿Qué entorno seguro y armónico se generaría?</li>
+                    </ul>
+                </div>
+                <textarea id="reflexion" rows="5" placeholder="Escribe tu reflexión (mínimo 250 caracteres)..." class="w-full bg-slate-900/50 border border-slate-600 rounded-xl p-4 text-sm text-slate-200"></textarea>
+                <div class="flex justify-between items-center mt-2">
+                    <span id="contadorReflexion" class="contador-caracteres falta">0 / 250 caracteres</span>
+                    <span id="feedback-reflexion" class="text-xs font-bold"></span>
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button class="btn-secundario" onclick="irPaso(2)">⬅ Regresar</button>
+                <button class="btn-paso" id="btnValidar" onclick="validarEvaluacion()">✅ Validar respuestas</button>
+                <button class="btn-paso" id="btnSiguiente" style="display:none;" onclick="irPaso(4)">📤 Enviar respuestas ➔</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 4: TRANSICIÓN (SIMULACIÓN DE ENVÍO) ========= -->
+        <div id="paso4" class="paso text-center">
+            <div class="py-12">
+                <div class="text-6xl mb-6 animate-bounce">⏳</div>
+                <h2 class="text-2xl font-bold text-rose-300 mb-3">Enviando tu información...</h2>
+                <p class="text-slate-400 text-sm">Estamos procesando tus respuestas y generando tu evidencia.</p>
+                <div class="w-48 h-2 bg-slate-700 rounded-full mx-auto mt-6 overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-rose-500 to-amber-400 rounded-full" id="barraCarga" style="width: 0%;"></div>
+                </div>
+                <p class="text-xs text-slate-500 mt-3" id="textoCarga">Preparando archivo...</p>
+            </div>
+        </div>
+
+        <!-- ========= PASO 5: RESULTADOS (DIAGRAMA DE CAJAS) ========= -->
+        <div id="paso5" class="paso">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-emerald-300">📊 Tu evidencia generada</h2>
+                <button class="btn-secundario text-xs" onclick="irPaso(3)">⬅ Regresar</button>
+            </div>
+            
+            <div class="bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-xl mb-4">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-emerald-300">✅ ¡Respuestas validadas!</strong> A continuación se muestra tu análisis en un diagrama secuencial.
+                </p>
+            </div>
+
+            <div class="diagrama-cajas" id="diagramaResultados">
+                <!-- Inyectado por JS -->
+            </div>
+
+            <div class="mt-6 p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                <p class="text-sm text-slate-300">
+                    <strong class="text-rose-300">📌 Reflexión en 3 momentos:</strong>
+                </p>
+                <div id="reflexionMostrada" class="text-sm text-slate-400 mt-2 italic"></div>
+            </div>
+
+            <div class="flex flex-wrap gap-4 mt-6 justify-between">
+                <button class="btn-secundario" onclick="irPaso(3)">⬅ Regresar</button>
+                <button class="btn-paso" onclick="generarPDF()">⬇️ Descargar mi evidencia en PDF</button>
+                <button class="btn-paso" id="btnEnviarFormulario" style="display:none;" onclick="irPaso(6)">📤 Enviar evidencia</button>
+            </div>
+        </div>
+
+        <!-- ========= PASO 6: ENVÍO AL FORMULARIO ========= -->
+        <div id="paso6" class="paso text-center">
+            <div class="py-8">
+                <span class="text-6xl block mb-4">📤</span>
+                <h2 class="text-2xl font-bold text-rose-300 mb-3">¡Listo para entregar!</h2>
+                <p class="text-slate-400 text-sm mb-6">
+                    Ya tienes tu evidencia en PDF. Ahora solo debes subirla al formulario oficial.
+                </p>
+
+                <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-xl text-left mb-6">
+                    <p class="text-sm text-slate-300 font-bold mb-2">📌 Instrucciones importantes:</p>
+                    <ul class="text-sm text-slate-400 list-disc list-inside space-y-2">
+                        <li>Llena <strong class="text-rose-300">todos</strong> los campos del formulario.</li>
+                        <li>Escribe tu <strong class="text-rose-300">número de cuenta</strong> sin espacios al inicio ni al final.</li>
+                        <li>El número de cuenta es tu <strong class="text-rose-300">identificador oficial</strong> para validar tu entrega.</li>
+                    </ul>
+                </div>
+
+                <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=nn_hqb6Q0EGE62pI6-n-wMN_dUxOwbVAu1QaWfm5rm1UMVFVQ1FVVTZLTUpTVlBPRUw0TFdPWURaVi4u" target="_blank" class="btn-paso inline-block text-center w-full" style="text-decoration:none;">
+                    📤 Subir mi evidencia al formulario
+                </a>
+
+                <div class="mt-6">
+                    <a href="../index.html" class="btn-volver-lab">🏠 Regresar a casa</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let pasoActual = 0;
+        const totalPasos = 7; // 0-6
+        let respuestas = [null, null, null, null, null];
+        const respuestasCorrectas = ['b', 'b', 'b', 'b', 'b'];
+        let nombre = '';
+        let grupo = '';
+        let reflexionTexto = '';
+
+        function irPaso(numero) {
+            document.querySelectorAll('.paso').forEach(el => el.classList.remove('activo'));
+            document.getElementById('paso' + numero).classList.add('activo');
+            pasoActual = numero;
+            document.getElementById('progressFill').style.width = ((numero / totalPasos) * 100) + '%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function iniciarLaboratorio() {
+            nombre = document.getElementById('nombreAlumno').value.trim();
+            grupo = document.getElementById('grupoAlumno').value.trim();
+            if (nombre.length < 3 || grupo.length < 1) {
+                alert('Por favor, llena todos los campos (nombre y grupo).');
+                return;
+            }
+            irPaso(1);
+        }
+
+        function seleccionarRespuesta(preguntaIdx, el, valor) {
+            const contenedor = el.closest('.mb-5');
+            if (contenedor) {
+                contenedor.querySelectorAll('.opcion-btn').forEach(btn => btn.classList.remove('seleccionada'));
+            }
+            el.classList.add('seleccionada');
+            respuestas[preguntaIdx] = valor;
+        }
+
+        function validarEvaluacion() {
+            let todasCorrectas = true;
+            const feedbacks = ['feedback-0', 'feedback-1', 'feedback-2', 'feedback-3', 'feedback-4'];
+
+            for (let i = 0; i < 5; i++) {
+                const fb = document.getElementById(feedbacks[i]);
+                if (respuestas[i] === respuestasCorrectas[i]) {
+                    fb.innerHTML = '✅ Correcto';
+                    fb.className = 'text-xs font-bold mt-1 text-emerald-400';
+                } else {
+                    fb.innerHTML = '❌ Incorrecto. Revisa el artículo y el video.';
+                    fb.className = 'text-xs font-bold mt-1 text-rose-400';
+                    todasCorrectas = false;
+                }
+            }
+
+            // Validar reflexión (mínimo 250 caracteres)
+            reflexionTexto = document.getElementById('reflexion').value.trim();
+            const fbRef = document.getElementById('feedback-reflexion');
+            if (reflexionTexto.length >= 250) {
+                fbRef.innerHTML = '✅ Reflexión válida';
+                fbRef.className = 'text-xs font-bold mt-1 text-emerald-400';
+            } else {
+                fbRef.innerHTML = '❌ Escribe al menos 250 caracteres.';
+                fbRef.className = 'text-xs font-bold mt-1 text-rose-400';
+                todasCorrectas = false;
+            }
+
+            if (todasCorrectas) {
+                document.getElementById('btnValidar').style.display = 'none';
+                document.getElementById('btnSiguiente').style.display = 'inline-block';
+            } else {
+                document.getElementById('btnValidar').style.display = 'inline-block';
+                document.getElementById('btnSiguiente').style.display = 'none';
+            }
+        }
+
+        // Contador de caracteres en tiempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            const textarea = document.getElementById('reflexion');
+            const contador = document.getElementById('contadorReflexion');
+            textarea.addEventListener('input', function() {
+                const len = this.value.length;
+                contador.textContent = len + ' / 250 caracteres';
+                if (len >= 250) {
+                    contador.className = 'contador-caracteres ok';
+                } else {
+                    contador.className = 'contador-caracteres falta';
+                }
+            });
+        });
+
+        // SIMULACIÓN DE ENVÍO (Paso 4)
+        function irPasoConCarga(numero) {
+            irPaso(4);
+            let progreso = 0;
+            const barra = document.getElementById('barraCarga');
+            const texto = document.getElementById('textoCarga');
+            const interval = setInterval(() => {
+                progreso += Math.random() * 15;
+                if (progreso >= 100) {
+                    progreso = 100;
+                    clearInterval(interval);
+                    texto.textContent = '✅ ¡Información procesada!';
+                    setTimeout(() => {
+                        irPaso(5);
+                        mostrarResultados();
+                    }, 800);
+                }
+                barra.style.width = progreso + '%';
+                if (progreso < 30) texto.textContent = 'Validando respuestas...';
+                else if (progreso < 60) texto.textContent = 'Generando evidencia...';
+                else if (progreso < 90) texto.textContent = 'Preparando archivo...';
+            }, 200);
+        }
+
+        // Modificar el botón "Enviar respuestas" para que vaya a la transición
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnSiguiente = document.getElementById('btnSiguiente');
+            if (btnSiguiente) {
+                btnSiguiente.onclick = function() {
+                    irPasoConCarga(4);
+                };
+            }
+        });
+
+        function mostrarResultados() {
+            const container = document.getElementById('diagramaResultados');
+            const preguntas = [
+                '¿Quién normaliza el bullying?',
+                'Mensaje principal de Iñaki',
+                'Frase que invita a la autorreflexión',
+                'Rol de los "espectadores"',
+                'Enseñanza principal sobre prevención'
+            ];
+            const correctasTexto = [
+                'Quien se ríe, calla y mira hacia otro lado',
+                'La resiliencia y el apoyo transforman el dolor en fortaleza',
+                '"¿Tú cómo tratas a los demás? ¿Qué haces cuando ves que alguien se queda solo?"',
+                'Pueden detener el acoso interviniendo o empeorarlo con su silencio',
+                'La prevención empieza en casa, con la educación en empatía y responsabilidad'
+            ];
+
+            let html = '';
+            for (let i = 0; i < 5; i++) {
+                const esCorrecto = respuestas[i] === respuestasCorrectas[i];
+                html += `
+                    <div class="diagrama-item">
+                        <span class="numero">${i+1}.</span>
+                        <div class="caja ${esCorrecto ? 'correcta' : 'incorrecta'}">
+                            <p class="text-xs text-slate-400">${preguntas[i]}</p>
+                            <p class="${esCorrecto ? 'text-emerald-400' : 'text-rose-400'}">
+                                ${esCorrecto ? '✅ ' : '❌ '} ${esCorrecto ? correctasTexto[i] : 'Revisa tu respuesta'}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+
+            // Mostrar reflexión
+            document.getElementById('reflexionMostrada').textContent = reflexionTexto;
+
+            // Mostrar botón de enviar
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            // Configurar colores personalizados
+            const colorFondo = '#0f172a';
+            const colorTexto = '#f8fafc';
+            const colorRosa = '#ff6b6b';
+            const colorOro = '#f7c948';
+            const colorGris = '#94a3b8';
+
+            // Fondo (simulación, jsPDF no soporta gradientes fácilmente)
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 297, 'F');
+
+            // Línea decorativa superior
+            doc.setDrawColor(255, 107, 107);
+            doc.setLineWidth(2);
+            doc.line(20, 25, 190, 25);
+
+            // Título
+            doc.setFontSize(20);
+            doc.setTextColor(255, 107, 107);
+            doc.text('🕊️ Cultura de Paz', 20, 45);
+
+            // Datos del estudiante
+            doc.setFontSize(11);
+            doc.setTextColor(200, 200, 200);
+            doc.text(`Nombre: ${nombre}`, 20, 65);
+            doc.text(`Grupo: ${grupo}`, 20, 75);
+            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 85);
+
+            // Línea separadora
+            doc.setDrawColor(51, 65, 85);
+            doc.line(20, 95, 190, 95);
+
+            // Título de resultados
+            doc.setFontSize(16);
+            doc.setTextColor(255, 107, 107);
+            doc.text('📊 Resultados del cuestionario', 20, 110);
+
+            // Respuestas
+            doc.setFontSize(10);
+            doc.setTextColor(200, 200, 200);
+            const preguntas = [
+                '1. ¿Quién normaliza el bullying?',
+                '2. Mensaje principal de Iñaki',
+                '3. Frase que invita a la autorreflexión',
+                '4. Rol de los "espectadores"',
+                '5. Enseñanza principal sobre prevención'
+            ];
+            const correctasTexto = [
+                'Quien se ríe, calla y mira hacia otro lado',
+                'La resiliencia y el apoyo transforman el dolor en fortaleza',
+                '"¿Tú cómo tratas a los demás? ¿Qué haces cuando ves que alguien se queda solo?"',
+                'Pueden detener el acoso interviniendo o empeorarlo con su silencio',
+                'La prevención empieza en casa, con la educación en empatía y responsabilidad'
+            ];
+
+            let yPos = 125;
+            for (let i = 0; i < 5; i++) {
+                const esCorrecto = respuestas[i] === respuestasCorrectas[i];
+                doc.setTextColor(200, 200, 200);
+                doc.text(preguntas[i], 20, yPos);
+                yPos += 6;
+                if (esCorrecto) {
+                    doc.setTextColor(16, 185, 129);
+                    doc.text('✅ ' + correctasTexto[i], 25, yPos);
+                } else {
+                    doc.setTextColor(239, 68, 68);
+                    doc.text('❌ Incorrecto', 25, yPos);
+                }
+                yPos += 10;
+            }
+
+            // Reflexión
+            yPos += 5;
+            doc.setFontSize(14);
+            doc.setTextColor(255, 107, 107);
+            doc.text('📌 Reflexión en 3 momentos:', 20, yPos);
+            yPos += 8;
+            doc.setFontSize(10);
+            doc.setTextColor(200, 200, 200);
+            const lines = doc.splitTextToSize(reflexionTexto, 170);
+            doc.text(lines, 20, yPos);
+
+            // Pie de página
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Documento generado automáticamente - SOE UAEMex', 20, 280);
+
+            doc.save('Evidencia_CulturaPaz_' + nombre.replace(/\s/g, '_') + '.pdf');
+
+            // Mostrar mensaje y botón de enviar
+            document.getElementById('btnEnviarFormulario').style.display = 'inline-block';
+        }
+
+        // Inicializar
+        irPaso(0);
+    </script>
+
+</body>
+</html>
